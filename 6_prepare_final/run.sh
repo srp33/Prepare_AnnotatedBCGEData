@@ -6,18 +6,20 @@ set -o errexit
 # Build the Docker image
 #######################################################
 
-docker build -t inwosu/bc_data_curation_01 .
+docker build -t inwosu_bc_data_paper_prepare_final .
+exit
 
 #######################################################
 # Run docker command
 #######################################################
- 
+
+# While testing, use this command:
 dockerCommand="docker run -i -t --rm \
     -u $(id -u):$(id -g) \
-    -v $(pwd):/1_process_metadata \
+    -v $(pwd):/6_prepare_final \
     -v $(pwd)/../Data:/Data \
-    inwosu/bc_data_curation_01"
+    inwosu_bc_data_paper_prepare_final"
 
-time $dockerCommand Rscript scripts/parse_metadata.R 
+time $dockerCommand Rscript scripts/prepare_final.R
 
 # $dockerCommand bash

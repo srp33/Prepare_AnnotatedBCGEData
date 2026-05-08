@@ -10,7 +10,9 @@ if (!dir.exists(brainArray_dir))
 
 #Download brainArray custom CDF packages for each platform
 install_brain_array <- function(id) {
-  download.file(paste0("http://mbni.org/customcdf/25.0.0/entrezg.download/", id, "_25.0.0.tar.gz"),
+  # Example URL: http://brainarray.mbni.med.umich.edu/customcdf/25.0.0/entrezg.download/hugene10sthsentrezgprobe_25.0.0.tar.gz
+  
+  download.file(paste0("http://brainarray.mbni.med.umich.edu/customcdf/25.0.0/entrezg.download/", id, "_25.0.0.tar.gz"),
                 paste0("brainArray/", id, "_25.0.0.tar.gz"))
   install.packages(paste0("brainArray/", id, "_25.0.0.tar.gz"), repos = NULL, type = "source")
   unlink(paste0("brainArray/", id, "_25.0.0.tar.gz"))

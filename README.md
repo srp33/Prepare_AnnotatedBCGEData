@@ -8,4 +8,4 @@ Each step should be run in sequence (i.e., 1_ should be run first, followed by 2
 
 To run each step, your working directory should be the directory for that step.
 
-Each step is run by executing the `run_*.sh` script in that step.
+Each step is run by executing the `run.sh` script for that step.

@@ -1,4 +1,3 @@
-
 SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_exclude = c()) {
 
     out_file_path <- paste0(normalized_data, gseID, ".tsv.gz")
@@ -49,7 +48,7 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_excl
 # e.g SCAN_normalise("GSE118432", "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
 
 for (gseID in huExon$gseID) {
-SCAN_normalise(gseID, "pd.huex.1.0.st.v2", "huex10sthsentrezgprobe")
+  SCAN_normalise(gseID, "pd.huex.1.0.st.v2", "huex10sthsentrezgprobe")
 }
 
 for (gseID in huGene$gseID) {

@@ -6,19 +6,19 @@ set -o errexit
 # Build the Docker image
 #######################################################
 
-docker build -t inwosu_bc_data_paper_prepare_final .
+cp ../*.tsv .
+docker build -t inwosu/bc_data_curation_02 .  
 
 #######################################################
-# Run docker command
+# Run detailed functional tests on small file
 #######################################################
 
-# While testing, use this command:
 dockerCommand="docker run -i -t --rm \
     -u $(id -u):$(id -g) \
-    -v $(pwd):/6_prepare_final \
+    -v $(pwd):/2_process_affy_expression_data \
     -v $(pwd)/../Data:/Data \
-    inwosu_bc_data_paper_prepare_final"
+    inwosu/bc_data_curation_02"
 
-time $dockerCommand Rscript scripts/prepare_final.R
-
+time $dockerCommand Rscript scripts/parse_nomalize_scripts.R
+ 
 # $dockerCommand bash

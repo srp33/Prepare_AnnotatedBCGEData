@@ -1,6 +1,4 @@
-
 SCAN_normalise <- function(gseID, annotation_package, probe_summary, celFilePaths) {
-    
     out_file_path <- paste0(normalized_data, gseID, ".tsv.gz")
     tmp_dir <- paste0("/tmp/", gseID)
 
@@ -21,7 +19,10 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, celFilePath
             gsm_id <- basename(celFilePath)
             gsm_id <- gsub("\\.cel.gz", "", gsm_id, ignore.case = TRUE)
 
+            print("test1")
             normalized <- exprs(SCAN(celFilePath, annotationPackageName = annotation_package, probeSummaryPackage = probe_summary))
+            print("test2")
+            stop("abc")
             normalized <- as_tibble(normalized, rownames = "Gene")
 
             colnames(normalized)[2] <- gsm_id
@@ -36,7 +37,6 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, celFilePath
         print(paste0("Saved to ", out_file_path))
     }
 }
-
 
 GSE23720 <- getGEO("GSE23720")
 GSE23720_celfile <- pData(GSE23720[[1]]) %>%

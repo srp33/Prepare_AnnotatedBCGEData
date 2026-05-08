@@ -7,6 +7,7 @@ set -o errexit
 #######################################################
 
 docker build -t inwosu/bc_data_curation_03 .
+exit
 
 #######################################################
 # Run detailed functional tests on small file

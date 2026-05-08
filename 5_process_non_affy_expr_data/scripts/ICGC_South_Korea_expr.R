@@ -1,22 +1,23 @@
+# FYI: The first parts of this code are what we used when the files were available
+#      on the ICGC portal. We are keeping it here for provenance. We placed a copy
+#      of the processed files online and are using those.
 
-
-# Download and save file
-download.file("https://dcc.icgc.org/api/v1/download?fn=/current/Projects/BRCA-KR/exp_seq.BRCA-KR.tsv.gz",
-              destfile = paste0(tmp_dir, "exp_seq_BRCA_KR.tsv.gz"))
-exp_array_BRCA_KR <- read_tsv(paste0(tmp_dir, "exp_seq_BRCA_KR.tsv.gz"))
+# # Download and save file
+# download.file("https://dcc.icgc.org/api/v1/download?fn=/current/Projects/BRCA-KR/exp_seq.BRCA-KR.tsv.gz",
+#               destfile = paste0(tmp_dir, "exp_seq_BRCA_KR.tsv.gz"))
+# exp_array_BRCA_KR <- read_tsv(paste0(tmp_dir, "exp_seq_BRCA_KR.tsv.gz"))
 
 
 # clean up data
-BRCA_KR <- exp_array_BRCA_KR %>%
-  rename("HGNC_Symbol" = "gene_id") %>%
-  dplyr::filter(HGNC_Symbol != "SLC35E2") %>%
-  dplyr::select(HGNC_Symbol, icgc_donor_id, normalized_read_count) %>%
-  mutate(normalized_read_count = log2(normalized_read_count + 1)) %>%
-  pivot_wider(names_from = icgc_donor_id, values_from = normalized_read_count)
-
-print("Writing BRCA_KR to file!")
-write_tsv(BRCA_KR, paste0(data_dir, "ICGC_KR.tsv.gz"))
-
+# BRCA_KR <- exp_array_BRCA_KR %>%
+#   rename("HGNC_Symbol" = "gene_id") %>%
+#   dplyr::filter(HGNC_Symbol != "SLC35E2") %>%
+#   dplyr::select(HGNC_Symbol, icgc_donor_id, normalized_read_count) %>%
+#   mutate(normalized_read_count = log2(normalized_read_count + 1)) %>%
+#   pivot_wider(names_from = icgc_donor_id, values_from = normalized_read_count)
+# 
+# print("Writing BRCA_KR to file!")
+# write_tsv(BRCA_KR, paste0(data_dir, "ICGC_KR.tsv.gz"))
 
 # This code snippet was used to identify the gene "SLC35E2" as being duplicated
 # donor_id <- exp_array_BRCA_KR %>%
@@ -43,3 +44,5 @@ write_tsv(BRCA_KR, paste0(data_dir, "ICGC_KR.tsv.gz"))
 #   summarise(count = n())
 # We were able to identify the gene here because it had a count of 100, whereas others had a count of 50
 # we then modified the code above and added a filter step
+
+download.file("https://osf.io/download/2v6uw", destfile = paste0(data_dir, "ICGC_KR.tsv.gz"))
