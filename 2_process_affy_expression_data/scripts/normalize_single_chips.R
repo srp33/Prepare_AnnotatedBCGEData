@@ -47,22 +47,22 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_excl
 # To run individual GSE ids, run the code line below, substituting with actual values (GSEID, annotation_package, probe_summary)
 # e.g SCAN_normalise("GSE118432", "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
 
-for (gseID in huExon$gseID) {
+foreach (gseID in huExon$gseID) {
     SCAN_normalise(gseID, "pd.huex.1.0.st.v2", "huex10sthsentrezgprobe")
 }
 
-for (gseID in huGene$gseID) {
+foreach (gseID in huGene$gseID) {
     SCAN_normalise(gseID, "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
 }
 
 foreach (gseID = U95_2$gseID) %dopar%
     SCAN_normalise(gseID, "pd.hg.u95av2", "hgu95av2hsentrezgprobe")
 
-for (gseID in U133_A_Early_Access$gseID) {
+foreach (gseID in U133_A_Early_Access$gseID) {
     SCAN_normalise(gseID, "pd.ht.hg.u133a", "u133aaofav2hsentrezgprobe")
 }
 
-for (gseID in U133_A$gseID) {
+foreach (gseID in U133_A$gseID) {
     SCAN_normalise(gseID, "pd.hg.u133a", "hgu133ahsentrezgprobe")
 }
 

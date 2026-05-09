@@ -1,4 +1,3 @@
-
 SCAN_normalise <- function(gseID, annotation_package, probe_summary, output_filename, celFilePaths) {
     out_file_path <- paste0(normalized_data, output_filename, ".tsv.gz")
     tmp_dir <- paste0("/tmp/", output_filename)
