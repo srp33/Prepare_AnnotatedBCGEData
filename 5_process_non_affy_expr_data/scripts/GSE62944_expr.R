@@ -5,11 +5,9 @@ if (!file.exists(paste0(tmp_dir, "GSE62944_RAW.tar"))) {
   untar(storage_dir[1], exdir = tmp_dir)
 }
 
-print("debug2")
 tpm_file_path <- paste0(tmp_dir, "GSM1536837_06_01_15_TCGA_24.tumor_Rsubread_TPM.txt.gz")
 print(paste0("Reading ", tpm_file_path))
 GSE62944_tumor_df <- read_tsv(tpm_file_path, col_names = F)
-print("debug3")
 
 #Process tumor gene expression data
 print("Reading tumor samples file")

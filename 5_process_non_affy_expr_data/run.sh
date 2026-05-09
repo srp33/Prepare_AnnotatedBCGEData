@@ -13,7 +13,8 @@ docker build -t inwosu/bc_data_curation_05 .
 #######################################################
 
 # While you are testing, use this command:
-dockerCommand="docker run -i -t --rm \
+#dockerCommand="docker run -i -t --rm \
+dockerCommand="docker run -i --rm \
     -u $(id -u):$(id -g) \
     -v $(pwd):/5_process_non_affy_expr_data \
     -v $(pwd)/../Data:/Data \

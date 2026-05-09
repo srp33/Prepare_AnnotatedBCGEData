@@ -19,9 +19,9 @@ if (!dir.exists(data_dir)) {
 
 # source("scripts/GSE81538_expr.R")
 # source("scripts/GSE96058_expr.R")
-source("scripts/GSE62944_expr.R")
+# source("scripts/GSE62944_expr.R")
 # source("scripts/Metabric_expr.R")
 # source("scripts/ICGC_South_Korea_expr.R")
 # source("scripts/SCAN_B_expr.R")
 
-# unlink(tmp_dir, recursive = TRUE, force = TRUE)
+unlink(tmp_dir, recursive = TRUE, force = TRUE)

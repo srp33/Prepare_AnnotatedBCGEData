@@ -1,5 +1,4 @@
 SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_exclude = c()) {
-
     out_file_path <- paste0(normalized_data, gseID, ".tsv.gz")
     tmp_dir <- paste0("/tmp/", gseID)
    
@@ -37,6 +36,7 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_excl
                 all_normalized <- inner_join(all_normalized, normalized, by = "Gene")
             }
         }
+
         write_tsv(all_normalized, out_file_path)
         print(paste0("Saved to ", out_file_path))
 
@@ -48,30 +48,29 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_excl
 # e.g SCAN_normalise("GSE118432", "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
 
 for (gseID in huExon$gseID) {
-  SCAN_normalise(gseID, "pd.huex.1.0.st.v2", "huex10sthsentrezgprobe")
+    SCAN_normalise(gseID, "pd.huex.1.0.st.v2", "huex10sthsentrezgprobe")
 }
 
 for (gseID in huGene$gseID) {
-  SCAN_normalise(gseID, "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
+    SCAN_normalise(gseID, "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
 }
 
-for (gseID in U95_2$gseID) {
-  SCAN_normalise(gseID, "pd.hg.u95av2", "hgu95av2hsentrezgprobe")
-}
+foreach (gseID = U95_2$gseID) %dopar%
+    SCAN_normalise(gseID, "pd.hg.u95av2", "hgu95av2hsentrezgprobe")
 
 for (gseID in U133_A_Early_Access$gseID) {
-  SCAN_normalise(gseID, "pd.ht.hg.u133a", "u133aaofav2hsentrezgprobe")
+    SCAN_normalise(gseID, "pd.ht.hg.u133a", "u133aaofav2hsentrezgprobe")
 }
 
 for (gseID in U133_A$gseID) {
-SCAN_normalise(gseID, "pd.hg.u133a", "hgu133ahsentrezgprobe")
+    SCAN_normalise(gseID, "pd.hg.u133a", "hgu133ahsentrezgprobe")
 }
 
 for (gseID in U133_A2$gseID) {
-SCAN_normalise(gseID, "pd.hg.u133a.2", "hgu133a2hsentrezgprobe")
+    SCAN_normalise(gseID, "pd.hg.u133a.2", "hgu133a2hsentrezgprobe")
 }
 
-# we are excluding c("GSM125119", "GSM125120") in GSE5460 because the are listed as corrupted on GEO website
+# We are excluding c("GSM125119", "GSM125120") in GSE5460 because the are listed as corrupted on the GEO website
 for (gseID in U133_plus_2$gseID) {
     SCAN_normalise(gseID, "pd.hg.u133.plus.2", "hgu133plus2hsentrezgprobe", c("GSM125119", "GSM125120"))
 }
