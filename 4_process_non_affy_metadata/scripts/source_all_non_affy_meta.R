@@ -35,7 +35,7 @@ source("functions/removeCols.R")
 source("scripts/GSE81538_meta.R")
 source("scripts/GSE96058_meta.R")
 source("scripts/GSE62944_meta.R")
-source("scripts/Metabric_meta.R")
+source("scripts/METABRIC_meta.R")
 source("scripts/ICGC_South_Korea_meta.R")
 source("scripts/SCAN_B_meta.R")
 

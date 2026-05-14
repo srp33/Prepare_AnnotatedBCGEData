@@ -28,7 +28,7 @@
 
 tmp_file_path = paste0(tmp_dir, "ICGC.tsv.gz")
 
-download.file("https://osf.io/download/2sxjy", destfile = tmp_file_path)
+download.file("https://zenodo.org/records/20097812/files/ICGC_KR_sample_metadata.tsv.gz?download=1", destfile = tmp_file_path)
 
 combined_df <- read_tsv(tmp_file_path) %>%
   mutate(Dataset_ID = "ICGC_KR", .before = Sample_ID) %>%

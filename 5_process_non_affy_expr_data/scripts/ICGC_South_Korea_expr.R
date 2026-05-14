@@ -45,4 +45,4 @@
 # We were able to identify the gene here because it had a count of 100, whereas others had a count of 50
 # we then modified the code above and added a filter step
 
-download.file("https://osf.io/download/2v6uw", destfile = paste0(data_dir, "ICGC_KR.tsv.gz"))
+download.file("https://zenodo.org/records/20097812/files/ICGC_KR_gene_expression.tsv.gz?download=1", destfile = paste0(data_dir, "ICGC_KR.tsv.gz"))

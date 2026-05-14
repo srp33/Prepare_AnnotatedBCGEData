@@ -157,7 +157,10 @@ if (gseID == "GSE12093") {
 if (gseID == "GSE12276") {
   metadata <- metadata %>%
     dplyr::select(-starts_with("title")) %>%
-    dplyr::select(-starts_with("description"))
+    dplyr::select(-starts_with("description")) %>%
+    mutate(site_of_relapse = if_else(is.na(site_of_relapse_brain_or_other), site_of_relapse, site_of_relapse_brain_or_other)) %>%
+    mutate(survival_time_months = if_else(is.na(survival_time_months), survival_time_months_2, survival_time_months)) %>%
+    dplyr::select(-site_of_relapse_brain_or_other, -survival_time_months_2)
 }
 
 if (gseID == "GSE16391") {
@@ -258,7 +261,8 @@ if (gseID == "GSE20711") {
     dplyr::select(-("title")) %>%
     dplyr::select(-("description")) %>%
     dplyr::select(-starts_with("methylation")) %>%
-    dplyr::select(-starts_with("quality"))
+    dplyr::select(-starts_with("quality")) %>%
+    mutate(t_os = str_replace(t_os, " y$", ""))
 }
 
 if (gseID == "GSE21653") {

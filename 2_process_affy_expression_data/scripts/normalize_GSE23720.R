@@ -1,5 +1,4 @@
-SCAN_normalise <- function(gseID, annotation_package, probe_summary, celFilePaths) {
-    out_file_path <- paste0(normalized_data, gseID, ".tsv.gz")
+SCAN_normalise <- function(gseID, annotation_package, probe_summary, celFilePaths, out_file_path) {
     tmp_dir <- paste0("/tmp/", gseID)
 
     if (file.exists(out_file_path)) {
@@ -35,11 +34,17 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, celFilePath
     }
 }
 
-GSE23720 <- getGEO("GSE23720")
-GSE23720_celfile <- pData(GSE23720[[1]]) %>%
-  mutate(geo_accession = str_c("/tmp/GSE23720/", geo_accession, ".CEL.gz")) %>%
-  pull(2)
+out_file_path <- paste0(normalized_data, "GSE23720.tsv.gz")
 
-SCAN_normalise("GSE23720", "pd.hg.u133.plus.2", "hgu133plus2hsentrezgprobe", GSE23720_celfile)
+if (file.exists(out_file_path)) {
+    print(paste0("File already exists at ", out_file_path, " , so this dataset will not be processed."))
+} else {
+  GSE23720 <- getGEO("GSE23720")
+  GSE23720_celfile <- pData(GSE23720[[1]]) %>%
+    mutate(geo_accession = str_c("/tmp/GSE23720/", geo_accession, ".CEL.gz")) %>%
+    pull(2)
 
-unlink("GSE23720", recursive = TRUE, force = TRUE)
+  SCAN_normalise("GSE23720", "pd.hg.u133.plus.2", "hgu133plus2hsentrezgprobe", GSE23720_celfile, out_file_path)
+
+  unlink("GSE23720", recursive = TRUE, force = TRUE)
+}

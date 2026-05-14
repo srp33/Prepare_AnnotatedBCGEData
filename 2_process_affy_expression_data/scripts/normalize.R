@@ -7,8 +7,9 @@ library(GEOquery)
 library(tools)
 
 # Enable parallelization
-registerDoParallel(4)
-stopifnot(foreach::getDoParWorkers() == 4)
+num_parallel = 2
+registerDoParallel(num_parallel)
+stopifnot(foreach::getDoParWorkers() == num_parallel)
 
 # Download may time out, due to large file sizes, use this option to allow for longer download times
 options(timeout = max(3000, getOption("timeout")))
@@ -21,7 +22,7 @@ if (!dir.exists(normalized_data)) {
 }
 
 source("scripts/filter_chips.R")
-# source("scripts/normalize_E_TABM_158.R")
-# source("scripts/normalize_GSE23720.R")
+#source("scripts/normalize_E_TABM_158.R")
+#source("scripts/normalize_GSE23720.R")
 source("scripts/normalize_single_chips.R")
 # source("scripts/normalize_multiple_chips.R")

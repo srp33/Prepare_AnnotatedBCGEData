@@ -20,6 +20,6 @@ dockerCommand="docker run -i --rm \
     -v $(pwd)/../Data:/Data \
     inwosu/bc_data_curation_02"
 
-time $dockerCommand Rscript scripts/parse_nomalize_scripts.R
+time $dockerCommand Rscript scripts/normalize.R
  
 # $dockerCommand bash

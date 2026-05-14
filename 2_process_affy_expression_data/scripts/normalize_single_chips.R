@@ -3,7 +3,7 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_excl
     tmp_dir <- paste0("/tmp/", gseID)
    
     if (file.exists(out_file_path)) {
-        print(paste0(gseID, " has already been processed!"))
+        print(paste0("File already exists at ", out_file_path, " , so it will not be processed!"))
     } else {
         unlink(tmp_dir, recursive = TRUE, force = TRUE)
         dir.create(tmp_dir)
@@ -47,30 +47,25 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, GSM_to_excl
 # To run individual GSE ids, run the code line below, substituting with actual values (GSEID, annotation_package, probe_summary)
 # e.g SCAN_normalise("GSE118432", "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
 
-foreach (gseID in huExon$gseID) {
+# There's only one for this platform, so we don't need to parallelize.
+for (gseID in huExon$gseID)
     SCAN_normalise(gseID, "pd.huex.1.0.st.v2", "huex10sthsentrezgprobe")
-}
 
-foreach (gseID in huGene$gseID) {
+foreach (gseID = huGene$gseID) %dopar%
     SCAN_normalise(gseID, "pd.hugene.1.0.st.v1", "hugene10sthsentrezgprobe")
-}
 
 foreach (gseID = U95_2$gseID) %dopar%
     SCAN_normalise(gseID, "pd.hg.u95av2", "hgu95av2hsentrezgprobe")
 
-foreach (gseID in U133_A_Early_Access$gseID) {
+foreach (gseID = U133_A_Early_Access$gseID) %dopar%
     SCAN_normalise(gseID, "pd.ht.hg.u133a", "u133aaofav2hsentrezgprobe")
-}
 
-foreach (gseID in U133_A$gseID) {
+foreach (gseID = U133_A$gseID) %dopar%
     SCAN_normalise(gseID, "pd.hg.u133a", "hgu133ahsentrezgprobe")
-}
 
-for (gseID in U133_A2$gseID) {
+foreach (gseID = U133_A2$gseID) %dopar%
     SCAN_normalise(gseID, "pd.hg.u133a.2", "hgu133a2hsentrezgprobe")
-}
 
 # We are excluding c("GSM125119", "GSM125120") in GSE5460 because the are listed as corrupted on the GEO website
-for (gseID in U133_plus_2$gseID) {
+foreach (gseID = U133_plus_2$gseID) %dopar%
     SCAN_normalise(gseID, "pd.hg.u133.plus.2", "hgu133plus2hsentrezgprobe", c("GSM125119", "GSM125120"))
-}

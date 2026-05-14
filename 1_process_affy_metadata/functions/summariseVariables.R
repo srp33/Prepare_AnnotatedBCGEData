@@ -1,4 +1,3 @@
-
 summariseVariables <- function(metadata) {
   add_to_char <- NULL
 

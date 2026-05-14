@@ -3,7 +3,7 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, output_file
     tmp_dir <- paste0("/tmp/", output_filename)
 
     if (file.exists(out_file_path)) {
-        print(paste0(output_filename, " has already been processed!"))
+        print(paste0("File already exists at ", out_file_path, ", so this dataset will not be processed!"))
     } else {
         unlink(tmp_dir, recursive = TRUE, force = TRUE)
         dir.create(tmp_dir)

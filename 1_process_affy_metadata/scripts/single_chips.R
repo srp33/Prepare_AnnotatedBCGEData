@@ -1,5 +1,3 @@
-#This script parses gene expression metadata
-
 gseIDs <- read_tsv("Affymetrix_Platforms.tsv")
 
 keep_platforms <- c("Affymetrix Human Exon 1.0 ST Array [transcript (gene) version]", "Affymetrix Human Gene 1.0 ST Array [transcript (gene) version]",
@@ -37,7 +35,6 @@ for (gseID in gseID_list) {
       # source file to address special cases
       source("scripts/special_cases.R")
       
-      # summarise variables
       varSummary <- summariseVariables(metadata)
 
       #write cleaned up data to files

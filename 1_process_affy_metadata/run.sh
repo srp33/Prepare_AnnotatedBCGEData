@@ -19,6 +19,6 @@ dockerCommand="docker run -i -t --rm \
     -v $(pwd)/../Data:/Data \
     inwosu/bc_data_curation_01"
 
-time $dockerCommand Rscript scripts/parse_metadata.R 
+time $dockerCommand Rscript scripts/process_metadata.R 
 
 # $dockerCommand bash
