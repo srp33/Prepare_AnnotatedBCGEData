@@ -1,3 +1,8 @@
+# Here we are excluding columns that are not useful for analysis. For example, some columns
+#   are aggregates of other columns; are predictions based on the data, rather than direct
+#   sample characteristics; all have the same value; are all NA; are unique identifiers that
+#   do not provide usefulness for analyzing the data, etc. We also filter out some samples
+#   that are not gene expression data, etc.
 
 if (gseID == "GSE1561") {
   metadata <- metadata %>%
@@ -14,7 +19,7 @@ if (gseID == "GSE2034") {
 if (gseID == "GSE2603") {
   metadata <- metadata %>%
     filter(str_detect(title, "^B")) %>% # the other samples are from cell lines
-    dplyr::select(-c("title", "name")) %>%
+    dplyr::select(-c("title", "name", "tissue_type", "vant_veer_signature")) %>%
     dplyr::select(-starts_with("description"))
 }
 
@@ -37,7 +42,7 @@ if (gseID == "GSE4611") {
 
 if (gseID == "GSE5327") {
   metadata <- metadata %>%
-    dplyr::select(-c("description", "lms_status")) %>%
+    dplyr::select(-c("description", "lms_status", "Patient_ID")) %>%
     dplyr::rename(er_status = title) %>% 
     mutate(across(er_status, ~str_replace(., " human primary breast tumor ", ","))) %>%
     separate("er_status", c("er_status", "Patient_ID"), sep = ",")
@@ -87,7 +92,7 @@ if (gseID == "GSE7378") {
 
 if (gseID == "GSE7390") {
   metadata <- metadata %>%
-    dplyr::select(-c("title", "description", "filename", "veridex_risk", "risknpi", "risksg"))
+    dplyr::select(-c("title", "description", "filename", "veridex_risk", "risknpi", "risksg", "aol_os_10y", "risk_aol"))
 }
 
 if (gseID == "GSE7904") {
@@ -245,7 +250,7 @@ if (gseID == "GSE20271") {
 
 if (gseID == "GSE20437") {
   metadata <- metadata %>%
-    dplyr::select(-starts_with(c("tissue", "description"))) %>%
+    dplyr::select(-starts_with(c("tissue", "description", "histology"))) %>%
     rename(histology = title) %>%
     mutate(across(histology, ~str_replace(., "reduction mammoplasty", "normal"))) %>%
     mutate(across(histology, ~str_replace(., "\\d+$", ""))) 
@@ -657,5 +662,5 @@ if (gseID == "GSE23988") {
 
 if (gseID == "GSE93332") { 
   metadata <- metadata %>%
-    dplyr::select(-c("tissue", "title"))
+    dplyr::select(-c("tissue", "title", "tissue_preservation_method"))
 }
