@@ -46,7 +46,8 @@ if (gseID == "GSE5327") {
     dplyr::select(-c("description", "lms_status")) %>%
     dplyr::rename(er_status = title) %>% 
     mutate(across(er_status, ~str_replace(., " human primary breast tumor ", ","))) %>%
-    separate("er_status", c("er_status", "Patient_ID"), sep = ",")
+    separate("er_status", c("er_status", "Patient_ID"), sep = ",") %>%
+    dplyr::select(-Patient_ID)
 }
 
 if (gseID == "GSE5460") {
@@ -252,9 +253,13 @@ if (gseID == "GSE20271") {
 if (gseID == "GSE20437") {
   metadata <- metadata %>%
     dplyr::select(-starts_with(c("tissue", "description"))) %>%
-    rename(histology = title) %>%
-    mutate(across(histology, ~str_replace(., "reduction mammoplasty", "normal"))) %>%
-    mutate(across(histology, ~str_replace(., "\\d+$", ""))) 
+    dplyr::mutate(biospecimen_type = str_replace_all(specimen, "ER\\+ ", "")) %>%
+    dplyr::mutate(biospecimen_type = str_replace_all(biospecimen_type, "ER\\- ", "")) %>%
+    dplyr::mutate(er_status = if_else(specimen == "ER+ Breast Cancer", "ER+", disease_state)) %>%
+    dplyr::mutate(er_status = if_else(specimen == "ER- Breast Cancer", "ER-", er_status)) %>%
+    dplyr::mutate(er_status = if_else(specimen == "Reduction Mammoplasty", NA, er_status)) %>%
+    dplyr::mutate(er_status = if_else(specimen == "Prophylactic Mastectomy", NA, er_status)) %>%
+    dplyr::select(-title, -disease_state, -specimen)
 }
 
 if (gseID == "GSE20685") {
