@@ -1,4 +1,3 @@
-
 # save supplementary files to Directory and read into separate data frames
 cancerTypeSamples <- getGEOSuppFiles("GSE62944", makeDirectory = F, baseDir = tmp_dir, filter_regex = "GSE62944_06_01_15_TCGA_24_CancerType_Samples.txt.gz")
 CancerType <- rownames(cancerTypeSamples) %>%
@@ -69,7 +68,7 @@ tumor_filtered <- tumor_filtered[, colMeans(is.na(tumor_filtered)) < 0.5] %>%
 normal_filtered <- Merged_normal_df %>%
   dplyr::filter(bcr_patient_uuid != "NA") %>%
   dplyr::select(-c("form_completion_date", "prospective_collection", "retrospective_collection", "tissue_source_site", 
-                   "days_to_initial_pathologic_diagnosis", "icd_o_3_site", "lymph_nodes_examined_count", "tumor_tissue_site")) %>%
+                   "days_to_initial_pathologic_diagnosis", "icd_o_3_site", "lymph_nodes_examined_count", "tumor_tissue_site", "histological_type")) %>%
   remove_constant()
 
 normal_filtered <- normal_filtered[, colMeans(is.na(normal_filtered)) < 0.5] %>%
