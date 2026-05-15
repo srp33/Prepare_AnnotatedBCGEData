@@ -38,6 +38,7 @@ combined_df <- read_tsv(tmp_file_path) %>%
                 -study_donor_involved_in,
                 -donor_diagnosis_icd10,
                 -donor_tumour_stage_at_diagnosis_supplemental,
+                -donor_tumour_staging_system_at_diagnosis,
                 -prior_malignancy,
                 -cancer_type_prior_malignancy,
                 -cancer_history_first_degree_relative,

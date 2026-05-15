@@ -343,8 +343,7 @@ if (gseID == "GSE31138") {
 if (gseID == "GSE31192") {
   metadata <- metadata %>%
     separate("title", c("patient_id", "A", "er_status", "cell_type_1", "cell_type_2"), sep = ", ") %>%
-    rename(cell_type_3 = cell_type) %>%
-    dplyr::select(-c("A", "description", "description_1", "tissue"))
+    dplyr::select(-c("A", "description", "description_1", "tissue", "cell_type_1", "cell_type_2"))
 }
 
 if (gseID == "GSE31519") {
