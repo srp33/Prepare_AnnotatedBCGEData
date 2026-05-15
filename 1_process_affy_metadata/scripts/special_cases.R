@@ -251,7 +251,6 @@ if (gseID == "GSE20271") {
 
 if (gseID == "GSE20437") {
   metadata <- metadata %>%
-    dplyr::select(-histology) %>%
     dplyr::select(-starts_with(c("tissue", "description"))) %>%
     rename(histology = title) %>%
     mutate(across(histology, ~str_replace(., "reduction mammoplasty", "normal"))) %>%
