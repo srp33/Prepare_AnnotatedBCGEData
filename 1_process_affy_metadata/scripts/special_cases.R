@@ -2,7 +2,8 @@
 #   are aggregates of other columns; are predictions based on the data, rather than direct
 #   sample characteristics; all have the same value; are all NA; are unique identifiers that
 #   do not provide usefulness for analyzing the data, etc. We also filter out some samples
-#   that are not gene expression data, etc.
+#   that are not gene expression data, etc. We also modify a few of the data values and
+#   column names to reduce ambigiouity.
 
 if (gseID == "GSE1561") {
   metadata <- metadata %>%
@@ -42,7 +43,7 @@ if (gseID == "GSE4611") {
 
 if (gseID == "GSE5327") {
   metadata <- metadata %>%
-    dplyr::select(-c("description", "lms_status", "Patient_ID")) %>%
+    dplyr::select(-c("description", "lms_status")) %>%
     dplyr::rename(er_status = title) %>% 
     mutate(across(er_status, ~str_replace(., " human primary breast tumor ", ","))) %>%
     separate("er_status", c("er_status", "Patient_ID"), sep = ",")
@@ -141,7 +142,7 @@ if (gseID == "GSE10797") {
 
 if (gseID == "GSE10810") {
   metadata <- metadata %>%
-    dplyr::select(-title) %>%
+    dplyr::select(-title, -phenotypes) %>%
     separate("description", c("paired_status", "Patient_ID"), sep = "  ") %>%
     mutate(across(paired_status, ~str_replace(., "Control ", ""))) %>%
     mutate(across(paired_status, ~str_replace(., "Tumor ", ""))) %>%
@@ -250,7 +251,8 @@ if (gseID == "GSE20271") {
 
 if (gseID == "GSE20437") {
   metadata <- metadata %>%
-    dplyr::select(-starts_with(c("tissue", "description", "histology"))) %>%
+    dplyr::select(-histology) %>%
+    dplyr::select(-starts_with(c("tissue", "description"))) %>%
     rename(histology = title) %>%
     mutate(across(histology, ~str_replace(., "reduction mammoplasty", "normal"))) %>%
     mutate(across(histology, ~str_replace(., "\\d+$", ""))) 
