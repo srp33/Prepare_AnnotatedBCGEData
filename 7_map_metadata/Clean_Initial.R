@@ -50,12 +50,3 @@ all_fields = dplyr::select(all_fields_values, dataset, orig_field)
 anti_join(all_fields, all_initial_fields) %>%
   distinct() %>%
   write_xlsx("Metadata_Unmapped.xlsx")
-
-
-
-# unmapped_fields = anti_join(all_fields, all_initial)
-# View(all_fields)
-# View(unmapped_fields)
-
-# all_initial = mutate(all_initial, orig_values = as.character(orig_values)) %>%
-#   separate_longer_delim(orig_values, delim = "||")
