@@ -32,7 +32,37 @@ download.file("https://zenodo.org/records/20097812/files/ICGC_KR_sample_metadata
 
 combined_df <- read_tsv(tmp_file_path) %>%
   mutate(Dataset_ID = "ICGC_KR", .before = Sample_ID) %>%
-  mutate(Platform_ID = "Illumina HiSeq", .after = Sample_ID)
+  mutate(Platform_ID = "Illumina HiSeq", .after = Sample_ID) %>%
+  dplyr::rename(submitted_donor_id = submitted_donor_id.x) %>%
+  dplyr::select(-project_code.x,
+                -study_donor_involved_in,
+                -donor_diagnosis_icd10,
+                -donor_tumour_stage_at_diagnosis_supplemental,
+                -prior_malignancy,
+                -cancer_type_prior_malignancy,
+                -cancer_history_first_degree_relative,
+                -icgc_specimen_id,
+                -project_code.y,
+                -study_specimen_involved_in,
+                -submitted_specimen_id,
+                -submitted_donor_id.y,
+                -specimen_type,
+                -specimen_type_other,
+                -specimen_interval,
+                -specimen_donor_treatment_type,
+                -specimen_donor_treatment_type_other,
+                -specimen_processing,
+                -specimen_processing_other,
+                -specimen_storage,
+                -specimen_storage_other,
+                -tumour_confirmed,
+                -specimen_biobank,
+                -specimen_biobank_id,
+                -specimen_available,
+                -tumour_grade_supplemental,
+                -tumour_stage_supplemental,
+                -digital_image_of_stained_section,
+                -percentage_cellularity)
 
 #summarise metadata variables
 varSummary <- summariseVariables(combined_df)
@@ -46,6 +76,7 @@ if (nrow(varSummary$charSummary) >= 1) {
 }
 
 print("Writing ICGC_KR to file!")
+write_tsv(combined_df, file.path(raw_metadata_dir, "ICGC_KR.tsv"))
 write_tsv(combined_df, paste0(data_dir, "ICGC_KR.tsv"))
 
 # d_BRCA_KR <- read_tsv(paste0(tmp_dir, "donor.BRCA-KR.tsv.gz")) 
@@ -54,5 +85,3 @@ write_tsv(combined_df, paste0(data_dir, "ICGC_KR.tsv"))
 # combined_data <- d_BRCA_KR %>%
 #   inner_join(s_BRCA_KR, by = "icgc_donor_id") %>%
 #   dplyr::rename(Sample_ID = icgc_donor_id)
-
-write_tsv(combined_df, file.path(raw_metadata_dir, "ICGC_KR.tsv"))
