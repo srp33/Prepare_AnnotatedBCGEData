@@ -19,6 +19,6 @@ dockerCommand="docker run -i -t --rm \
     -v $(pwd)/../Data:/Data \
     inwosu_bc_data_paper_map_metadata"
 
-time $dockerCommand Rscript Clean_Initial.R
+time $dockerCommand Rscript Check_All.R
 
 # $dockerCommand bash

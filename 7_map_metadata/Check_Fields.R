@@ -8,16 +8,13 @@ library(writexl)
 # then checking again.
 ############################################################################################
 
-categorical_initial = read_xlsx("Metadata_Mappings_Initial.xlsx", sheet = "Categorical", col_types = rep("text", 6)) %>%
+categorical_initial = read_xlsx("Metadata_Mappings_Deduplicated.xlsx", sheet = "Categorical", col_types = rep("text", 7)) %>%
   dplyr::mutate(primitive_type = "Categorical")
 
-numeric_initial = read_xlsx("Metadata_Mappings_Initial.xlsx", sheet = "Numeric", col_types = rep("text", 6)) %>%
+numeric_initial = read_xlsx("Metadata_Mappings_Deduplicated.xlsx", sheet = "Numeric", col_types = rep("text", 7)) %>%
   dplyr::mutate(primitive_type = "Numeric")
 
 all_initial = bind_rows(categorical_initial, numeric_initial)
-
-# Remove duplicated rows.
-all_initial = all_initial[!duplicated(all_initial), ]
 
 all_fields_values = NULL
 
@@ -49,4 +46,4 @@ all_fields = dplyr::select(all_fields_values, dataset, orig_field)
 
 anti_join(all_fields, all_initial_fields) %>%
   distinct() %>%
-  write_xlsx("Metadata_Unmapped.xlsx")
+  write_xlsx("tmp_Metadata_Unmapped.xlsx")

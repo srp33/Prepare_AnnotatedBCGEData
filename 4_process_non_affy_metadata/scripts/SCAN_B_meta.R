@@ -5,7 +5,7 @@ source_file_name <- "metadata_table.xlsx"
 
 meta_file_path <- paste0(tmp_dir, source_file_name)
 
-platform_id <- "Illumina HumanHT-12 V4.0 expression beadchip"
+platform_id <- "Illumina Short-Read RNA-Sequencing"
 
 # Fill out columns you want to exclude
 excluded_columns <- list(
@@ -23,7 +23,7 @@ excluded_columns <- list(
 download.file(url = source_file_url, destfile = meta_file_path)#, mode = "wb") #use the wb mode if working on windows
 
 clean_metadata <- function(sheet, path) {
-    data_file <- path |>
+    data <- path |>
         read_excel(sheet = sheet, col_types = "text", .name_repair = "universal") |>
         mutate(across(everything(), ~type.convert(.x, as.is = TRUE))) |>
         write_tsv(paste0(raw_metadata_dir, sheet, ".tsv")) |> # write un-curated metadata to file
@@ -32,18 +32,24 @@ clean_metadata <- function(sheet, path) {
         mutate(Dataset_ID = sheet, .before = Sample_ID) |>
         mutate(Platform_ID = platform_id, .after = Sample_ID) |>
         dplyr::select(-excluded_columns[[sheet]]) |>
+        pull(age) %>%
+        unique() %>%
+        print()
+    stop("got here")
         write_tsv(paste0(data_dir, sheet, ".tsv")) |>
         summariseVariables()
 
-    if (!is.null(data_file$numSummary) && nrow(data_file$numSummary) >= 1) {
-        write_tsv(data_file$numSummary, file.path(paste0(meta_summaries_dir, sheet, "_num.tsv")))            
+    if (!is.null(data$numSummary) && nrow(data$numSummary) >= 1) {
+        write_tsv(data$numSummary, file.path(paste0(meta_summaries_dir, sheet, "_num.tsv")))            
     }
 
-    if (!is.null(data_file$charSummary) && nrow(data_file$charSummary) >= 1) {
-        write_tsv(data_file$charSummary, file.path(paste0(meta_summaries_dir, sheet, "_char.tsv")))
+    if (!is.null(data$charSummary) && nrow(data$charSummary) >= 1) {
+        write_tsv(data$charSummary, file.path(paste0(meta_summaries_dir, sheet, "_char.tsv")))
     }
 }
 
-meta_file_path %>%
-    excel_sheets() %>%
-    map(clean_metadata, path = meta_file_path)
+clean_metadata("ABiM.100", meta_file_path)
+
+#meta_file_path %>%
+#    excel_sheets() %>%
+    #map(clean_metadata, path = meta_file_path)

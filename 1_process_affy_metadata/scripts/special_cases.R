@@ -452,7 +452,7 @@ if (gseID == "GSE59772") {
 
 if (gseID == "GSE76275") {
   metadata <- metadata %>%
-    dplyr::select(-c("title", "characteristics_18", "description", "tissue", "set", "tnbc_subtype"))
+    dplyr::select(-c("title", "characteristics_18", "description", "histology_group", "tissue", "set", "tnbc_subtype"))
 }
 
 if (gseID == "GSE81838") {
