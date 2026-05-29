@@ -32,10 +32,6 @@ clean_metadata <- function(sheet, path) {
         mutate(Dataset_ID = sheet, .before = Sample_ID) |>
         mutate(Platform_ID = platform_id, .after = Sample_ID) |>
         dplyr::select(-excluded_columns[[sheet]]) |>
-        pull(age) %>%
-        unique() %>%
-        print()
-    stop("got here")
         write_tsv(paste0(data_dir, sheet, ".tsv")) |>
         summariseVariables()
 
@@ -49,6 +45,10 @@ clean_metadata <- function(sheet, path) {
 }
 
 clean_metadata("ABiM.100", meta_file_path)
+clean_metadata("ABiM.405", meta_file_path)
+clean_metadata("Normal.66", meta_file_path)
+clean_metadata("OSLO2EMIT0.103", meta_file_path)
+clean_metadata("SCANB.9206", meta_file_path)
 
 #meta_file_path %>%
 #    excel_sheets() %>%

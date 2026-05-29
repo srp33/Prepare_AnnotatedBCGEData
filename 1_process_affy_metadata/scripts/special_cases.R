@@ -100,9 +100,9 @@ if (gseID == "GSE7390") {
 if (gseID == "GSE7904") {
   metadata <- metadata %>%
     dplyr::select(-c("description", "description_1", "title")) %>%
-    dplyr::rename(breast_cancer_subtype = characteristics) %>%
-    mutate(across(breast_cancer_subtype, ~str_replace(., "NO", "Normal organelle"))) %>%
-    mutate(across(breast_cancer_subtype, ~str_replace(., "NB", "Normal breast")))
+    dplyr::rename(breast_cancer_subtype = characteristics) #%>%
+#    mutate(across(breast_cancer_subtype, ~str_replace(., "NO", "Normal organelle"))) %>%
+#    mutate(across(breast_cancer_subtype, ~str_replace(., "NB", "Normal breast")))
     # mutate(across(breast_cancer_subtype, ~case_when(. == "NO" ~ "Normal organelle", . == "NB" ~ "Normal breast", TRUE ~ as.character(.))))
 }
 
@@ -172,13 +172,6 @@ if (gseID == "GSE12276") {
 
 if (gseID == "GSE16391") {
   metadata <- metadata %>%
-    rename(`tumor_size_<=_2cm_=_1_>_2cm_=2` = size) %>%
-    rename(`treatment_Letrozol_=_0_Tamoxifen_=_1` = treatment) %>%
-    rename(`node_node_negative_=_0_node_positive_=_1` = node) %>%
-    rename(`local_therapy_BCS/RT_=_1_BCS/no_RT_=_2_Mx/RT_=_3` = local_therapy) %>%
-    rename(tumor_grade = grade) %>%
-    rename(`ER_PgR_ER+/PgR+_=_1_ER+/PgR-=_2` = er_pgr) %>%
-    rename(`post_menopausal_status_before_chemotherapy_=_1_after_chemotherapy_=_2` = post_menopausal_status) %>%
     dplyr::select(-starts_with(c("description", "post_menopausal_status"))) %>%
     dplyr::select(-c("title", "tissue", "cluster_id", "ggi"))
 }
@@ -255,9 +248,7 @@ if (gseID == "GSE20437") {
     dplyr::select(-starts_with(c("tissue", "description"))) %>%
     dplyr::mutate(biospecimen_type = str_replace_all(specimen, "ER\\+ ", "")) %>%
     dplyr::mutate(biospecimen_type = str_replace_all(biospecimen_type, "ER\\- ", "")) %>%
-    dplyr::mutate(er_status = if_else(specimen == "ER+ Breast Cancer", "ER+", disease_state)) %>%
-    dplyr::mutate(er_status = if_else(specimen == "ER- Breast Cancer", "ER-", er_status)) %>%
-    dplyr::mutate(er_status = if_else(specimen == "Reduction Mammoplasty", NA, er_status)) %>%
+    dplyr::mutate(er_status = if_else(specimen == "Reduction Mammoplasty", NA, specimen)) %>%
     dplyr::mutate(er_status = if_else(specimen == "Prophylactic Mastectomy", NA, er_status)) %>%
     dplyr::select(-title, -disease_state, -specimen)
 }
@@ -327,7 +318,7 @@ if (gseID == "GSE28796") {
     dplyr::select(-starts_with(c("description", "title", "tissue")))
 }
 
-if (gseID == "GSE28821") {  #examine associated journal article. suggests TNBC
+if (gseID == "GSE28821") {
   metadata <- metadata %>%
     dplyr::select(-("title")) %>%
     dplyr::select(-starts_with("description")) %>%
@@ -355,34 +346,34 @@ if (gseID == "GSE31519") {
     rename_with(~str_replace_all(., "2", ""))
 
   #biopsy type (1: surgical, 2: core needle)
-  metadata <- metadata %>%
-    mutate(across(biopsy_type, ~str_replace(., "surgical, 2: core needle\\)\\:", ""))) %>%
-    mutate(across(biopsy_type, ~str_replace(., "1", "surgical"))) %>%
-    mutate(across(biopsy_type, ~str_replace(., "2", "core needle")))
+#  metadata <- metadata %>%
+#    mutate(across(biopsy_type, ~str_replace(., "surgical, 2: core needle\\)\\:", ""))) %>%
+#    mutate(across(biopsy_type, ~str_replace(., "1", "surgical"))) %>%
+#    mutate(across(biopsy_type, ~str_replace(., "2", "core needle")))
 
   #event (1: yes, 0: no)
-  metadata <- metadata %>%
-    mutate(across(event, ~str_replace(., "yes, 0: no\\)\\:", ""))) %>%
-    mutate(across(event, ~str_replace(., "0", "no"))) %>%
-    mutate(across(event, ~str_replace(., "1", "yes")))
+#  metadata <- metadata %>%
+#    mutate(across(event, ~str_replace(., "yes, 0: no\\)\\:", ""))) %>%
+#    mutate(across(event, ~str_replace(., "0", "no"))) %>%
+#    mutate(across(event, ~str_replace(., "1", "yes")))
 
   #grade (12: G1 or G2, 3: G3)
-  metadata <- metadata %>%
-    mutate(across(grade, ~str_replace(., "G1 or G2, 3\\: G3\\)\\:", ""))) %>%
-    mutate(across(grade, ~str_replace(., "12", "G1 or G2"))) %>%
-    mutate(across(grade, ~str_replace(., "3", "G3")))
+#  metadata <- metadata %>%
+#    mutate(across(grade, ~str_replace(., "G1 or G2, 3\\: G3\\)\\:", ""))) %>%
+#    mutate(across(grade, ~str_replace(., "12", "G1 or G2"))) %>%
+#    mutate(across(grade, ~str_replace(., "3", "G3")))
 
   #lymph node status (0: negative, 1: positive)
-  metadata <- metadata %>%
-    mutate(across(lymph_node_status, ~str_replace(., "negative, 1\\: positive\\)\\: ", ""))) %>%
-    mutate(across(lymph_node_status, ~str_replace(., "0", "negative"))) %>%
-    mutate(across(lymph_node_status, ~str_replace(., "1", "positive")))
+#  metadata <- metadata %>%
+#    mutate(across(lymph_node_status, ~str_replace(., "negative, 1\\: positive\\)\\: ", ""))) %>%
+#    mutate(across(lymph_node_status, ~str_replace(., "0", "negative"))) %>%
+#    mutate(across(lymph_node_status, ~str_replace(., "1", "positive")))
 
   #tumor size (1: up to 1 cm, 2: >1cm)
-  metadata <- metadata %>%
-    mutate(across(tumor_size, ~str_replace(., "up to 1 cm, 2\\: \\>1cm\\)\\:", ""))) %>%
-    mutate(across(tumor_size, ~str_replace(., "1", "up to 1 cm"))) %>%
-    mutate(across(tumor_size, ~str_replace(., "2", "greater than 1 cm")))
+#  metadata <- metadata %>%
+#    mutate(across(tumor_size, ~str_replace(., "up to 1 cm, 2\\: \\>1cm\\)\\:", ""))) %>%
+#    mutate(across(tumor_size, ~str_replace(., "1", "up to 1 cm"))) %>%
+#    mutate(across(tumor_size, ~str_replace(., "2", "greater than 1 cm")))
 }
 
 if (gseID == "GSE32518") {
@@ -407,8 +398,8 @@ if (gseID == "GSE33692") {
 if (gseID == "GSE45255") {
   metadata <- metadata %>%
     dplyr::select(-starts_with(c("title", "description"))) %>%
-    rename(`endocrine_0=no_1=yes` = characteristics_9) %>%
-    mutate(across(`endocrine_0=no_1=yes`, ~str_replace(., "characteristics\\: endocrine\\? \\(0\\=no, 1\\=yes\\):", "")))
+    rename(`endocrine` = characteristics_9) #%>%
+    #mutate(across(`endocrine_0=no_1=yes`, ~str_replace(., "characteristics\\: endocrine\\? \\(0\\=no, 1\\=yes\\):", "")))
 }
 
 if (gseID == "GSE46184") {

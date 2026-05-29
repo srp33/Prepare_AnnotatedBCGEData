@@ -18,4 +18,5 @@ categorical_all = read_xlsx("Metadata_Mappings_Deduplicated.xlsx", sheet = "Cate
 categorical_temp = dplyr::select(categorical_all, dataset, orig_field)
 numeric_temp = dplyr::select(numeric_all, dataset, orig_field)
 common_temp = dplyr::intersect(categorical_temp, numeric_temp) %>%
-  arrange(dataset, orig_field)
+  arrange(dataset, orig_field) %>%
+  View()
