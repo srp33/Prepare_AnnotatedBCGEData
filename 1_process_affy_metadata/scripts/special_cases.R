@@ -579,7 +579,11 @@ if (gseID == "GSE29431") {
   metadata <- metadata %>%
     dplyr::select(-starts_with("characteristics_")) %>%
     dplyr::select(- "title") %>%
-    mutate(disease_state = str_replace(disease_state, "none", "normal")) 
+    mutate(re_status = str_extract(re, "^[+-]")) %>%
+    mutate(re_score = stringr::str_extract(re, "(?<=;).*")) %>%
+    mutate(rp_status = str_extract(rp, "^[+-]")) %>%
+    mutate(rp_score = stringr::str_extract(rp, "(?<=;).*")) %>%
+    dplyr::select(-re, -rp)
 }
 
 if (gseID == "GSE31448") {

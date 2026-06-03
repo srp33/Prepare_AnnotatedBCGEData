@@ -19,6 +19,6 @@ dockerCommand="docker run -i -t --rm \
     -v $(pwd)/../Data:/Data \
     inwosu_bc_data_paper_prepare_final"
 
-time $dockerCommand Rscript scripts/prepare_final.R
+time $dockerCommand Rscript scripts/process.R
 
 # $dockerCommand bash

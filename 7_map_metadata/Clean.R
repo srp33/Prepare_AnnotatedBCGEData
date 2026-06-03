@@ -77,6 +77,9 @@ numeric = inner_join(numeric, all_fields) %>%
 date = inner_join(date, all_fields) %>%
   mutate(orig_values = if_else(orig_values == "ND", "NA", orig_values))
 
+# Separate orig_value when they are categorical.
+categorical = separate_longer_delim(categorical, orig_values, "||")
+
 # Combine all into one
 # Re-order and rename columns.
 # Re-sort.
@@ -85,10 +88,8 @@ date = inner_join(date, all_fields) %>%
 # Infer Integer vs. Float for all numeric values.
 # Resave the Excel file under a different name.
 
-out_file_path = "Metadata_Mappings_Final.xlsx"
-
 all = bind_rows(numeric, date, identifier, categorical) %>%
-  dplyr::select(dataset, orig_field, basic_type, NCIT_field, orig_values, NCIT_values, comments) %>%
+  dplyr::select(dataset, orig_field, orig_values, basic_type, NCIT_field, NCIT_values, comments) %>%
   dplyr::rename(Dataset_ID = dataset,
                 Original_Field_Name = orig_field,
                 Field_Name_Ontology_Terms = NCIT_field,
@@ -123,7 +124,12 @@ all = bind_rows(numeric, date, identifier, categorical) %>%
       
       TRUE ~ Basic_Data_Type_Ontology_Term
     )
-  )
+  ) %>%
+  arrange(Field_Name_Ontology_Terms, Value_Ontology_Terms, Original_Field_Name)
+
+# Check for values that should be identifier or numeric but aren't.
+# filter(all, str_detect(Original_Value, "\\|\\|")) %>%
+#   View()
 
 ################################################################################
 
@@ -158,7 +164,7 @@ missing = setdiff(ontology_terms, ncit_terms)
 
 if (length(missing) > 0) {
   print("These terms are not in the ontology.")
-  print(ncit_terms)
+  print(missing)
   stop()
 }
 
@@ -166,4 +172,11 @@ ncit = filter(ncit, Term %in% ontology_terms) %>%
   dplyr::select(-Term) %>%
   arrange(Preferred_Label)
 
-write_xlsx(x = list(Mappings = all, Ontology_Terms = ncit), path = out_file_path)
+# all_grouped = group_by(all, Dataset_ID, Original_Field_Name, Basic_Data_Type_Ontology_Term, Field_Name_Ontology_Terms, Value_Ontology_Terms, Curatorial_Comments) %>%
+#   summarize(Original_Value = str_c(Original_Value, collapse="||")) %>%
+#   ungroup() %>%
+#   mutate(Original_Values = str_trunc(Original_Value, 32767)) %>%
+#   dplyr::select(Dataset_ID, Original_Field_Name, Original_Values, Basic_Data_Type_Ontology_Term, Field_Name_Ontology_Terms, Value_Ontology_Terms, Curatorial_Comments) %>%
+#   arrange(Field_Name_Ontology_Terms, Value_Ontology_Terms, Original_Field_Name)
+
+write_xlsx(x = list(Mappings = all, Ontology_Terms = ncit), path = "Metadata_Mappings_Final.xlsx")

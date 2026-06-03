@@ -31,9 +31,22 @@ clean_metadata <- function(sheet, path) {
         rename(Sample_ID = gex_assay) |>
         mutate(Dataset_ID = sheet, .before = Sample_ID) |>
         mutate(Platform_ID = platform_id, .after = Sample_ID) |>
-        dplyr::select(-excluded_columns[[sheet]]) |>
-        write_tsv(paste0(data_dir, sheet, ".tsv")) |>
-        summariseVariables()
+        dplyr::select(-excluded_columns[[sheet]])
+
+    if (sheet == "SCANB.9206") {
+      data <- rename(data, age_5_year_range = `age_5_year_range_e_g_35_31_35_40_36_40_45_41_45_etc`) |>
+        mutate(
+          age_5_year_range = if_else(
+            is.na(age_5_year_range),
+            NA_character_,
+            paste0(age_5_year_range - 4, "-", age_5_year_range)
+          )
+        )
+    }
+
+    write_tsv(data, paste0(data_dir, sheet, ".tsv"))
+
+    data <- summariseVariables(data)
 
     if (!is.null(data$numSummary) && nrow(data$numSummary) >= 1) {
         write_tsv(data$numSummary, file.path(paste0(meta_summaries_dir, sheet, "_num.tsv")))            
@@ -49,7 +62,3 @@ clean_metadata("ABiM.405", meta_file_path)
 clean_metadata("Normal.66", meta_file_path)
 clean_metadata("OSLO2EMIT0.103", meta_file_path)
 clean_metadata("SCANB.9206", meta_file_path)
-
-#meta_file_path %>%
-#    excel_sheets() %>%
-    #map(clean_metadata, path = meta_file_path)
