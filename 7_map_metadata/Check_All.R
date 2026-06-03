@@ -15,9 +15,12 @@ source("Check_Categorical_Values.R")
 source("Check_Annotations_Syntax.R")
 
 # Make sure the ontology preferred terms and codes align properly.
-# Add ontology terms for the primitive type of each (categorical, numeric, maybe not integer or identifier).
+source("Check_Ontology_Alignment.R")
+
+# Peform miscellaneous cleaning tasks.
+source("Clean.R")
 
 # Manual check.
-#   Pivot longer and then evaluate whether the same fields and values seem to
-#   have the same ontology terms mapped to them.
-# Add the unique values for numeric and identifier. Pivot longer.
+#   Sort and review the final spreadsheet various ways.
+#   Evaluate whether the same fields and values
+#   have the same ontology terms mapped to them, etc.

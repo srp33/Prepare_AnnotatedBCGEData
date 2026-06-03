@@ -44,6 +44,12 @@ for (metadata_file_path in list.files(path = "../Data/prelim_metadata", full.nam
 all_initial_fields = dplyr::select(all_initial, dataset, orig_field)
 all_fields = dplyr::select(all_fields_values, dataset, orig_field)
 
-anti_join(all_fields, all_initial_fields) %>%
-  distinct() %>%
-  write_xlsx("tmp_Metadata_Unmapped.xlsx")
+unmapped = anti_join(all_fields, all_initial_fields) %>%
+  distinct()
+
+if (nrow(unmapped) == 0) {
+  print("All fields are mapped.")
+} else {
+  write_xlsx(unmapped, "tmp_Metadata_Unmapped.xlsx")
+  print("Please review tmp_Metadata_Unmapped.xlsx for unmapped fields.")
+}
