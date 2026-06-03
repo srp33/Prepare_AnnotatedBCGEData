@@ -20,7 +20,7 @@ for (gseID in gseID_list) {
   out_file_path_raw_metadata <- paste0(raw_metadata_dir, gseID, ".tsv")
 
   if (file.exists(out_file_path_metadata)) {
-      print(paste0(gseID, " has already been processed!"))
+      print(paste0(out_file_path_metadata, " already exists, so it will not be processed!"))
   } else {
       # write un-curated metadata to file
       df <- getFromGEO(gseID)      
