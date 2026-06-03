@@ -30,7 +30,7 @@ for (gseID in gseID_list) {
       metadata <- df %>%
         removeUnusefulCols() %>%
         rename_with(~str_replace_all(., "_ch1", "")) %>%
-        mutate(across(where(is.character), ~replace(., . %in% c("?", "--", ""), NA)))
+        mutate(across(where(is.character), ~replace(., . %in% c("--", ""), NA)))
 
       # source file to address special cases
       source("scripts/special_cases.R")
