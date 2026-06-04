@@ -10,7 +10,7 @@ sort_sample = function(x) {
   return(paste(parts[1], parts[2], sep = "______"))
 }
 
-data = read_tsv("/Data/merged_doppelgang_results.tsv.gz") %>%
+data = read_tsv("/Data/merged_doppelgangR_results.tsv.gz") %>%
   mutate(sample1 = str_replace(sample1, "GSE\\d+:", "")) %>%
   mutate(sample2 = str_replace(sample2, "GSE\\d+:", "")) %>%
   filter(sample1 != sample2) %>%
@@ -27,7 +27,7 @@ ggplot(data, aes(x = expr.similarity)) +
   ylab("Count") +
   geom_vline(xintercept = 0.94, col = "red", linetype = "dashed")
 
-ggsave("doppelgangr_similarity_scores.pdf")
+ggsave("doppelgangR_similarity_scores.pdf")
 
 data <- filter(data, expr.similarity > 0.94) %>%
   select(sample1, sample2) %>%

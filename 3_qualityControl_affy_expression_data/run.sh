@@ -7,7 +7,6 @@ set -o errexit
 #######################################################
 
 docker build -t inwosu/bc_data_curation_03 .
-exit
 
 #######################################################
 # Run detailed functional tests on small file
@@ -19,6 +18,6 @@ dockerCommand="docker run -i -t --rm \
     -v $(pwd)/../Data:/Data \
     inwosu/bc_data_curation_03"
 
-time $dockerCommand Rscript scripts/source_all_QC.R
+time $dockerCommand Rscript scripts/process_all.R
 
 # $dockerCommand bash    

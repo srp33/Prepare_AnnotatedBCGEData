@@ -21,7 +21,7 @@ library("hgu133bcdf")
 options(timeout = max(300, getOption("timeout")))
 options(download.file.method.GEOquery = "wget")
 
-doppel_dir <- "/Data/doppelgang_results/"
+doppel_dir <- "/Data/doppelgangR_results/"
     if (!dir.exists(doppel_dir)) {
       dir.create(doppel_dir)
     }
@@ -36,11 +36,12 @@ source("functions/compute_IQRray.R")
 source("functions/run_IQRray.R")
 source("functions/bind_IQR_file.R")
 
-#source script that seperates datasets by array type
+#source script that separates datasets by array type
 source("scripts/filter_chips.R")
 
 # various QC scripts
-source("scripts/doppelgang.R")
+source("scripts/doppelgangR.R")
+stop("got here - process_all.R")
 source("scripts/merge_doppel_results.R")
 source("scripts/IQRray_E_TABM_158.R")
 source("scripts/IQRray_single_chips.R")

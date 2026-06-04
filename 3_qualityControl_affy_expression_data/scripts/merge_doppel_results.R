@@ -1,5 +1,5 @@
 # script to combine all doppelgang files.
-out_file_dir <- "/Data/doppelgang_results"
+out_file_dir <- "/Data/doppelgangR_results"
 
 file_paths <- list.files(out_file_dir, pattern = "*.tsv", full.names = T)
 
@@ -10,4 +10,4 @@ merged_doppel <- read_tsv(file_paths) %>%
   mutate(likely_duplicate = ifelse(expr.similarity > 0.99, "Yes", "No")) %>%
   distinct()
   
-write_tsv(merged_doppel, "/Data/merged_doppelgang_results.tsv.gz")
+write_tsv(merged_doppel, "/Data/merged_doppelgangR_results.tsv.gz")
