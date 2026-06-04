@@ -33,7 +33,6 @@ joint_cols <- full_join(meta_col, IQR_score) %>%
   mutate(gseID = "E_TABM_158") %>%
   dplyr::select(gseID, gsmID, celfileID, value)
 
-
 write_tsv(joint_cols, paste0(IQRray_file_path, "E_TABM_158.tsv"))
 print("Saved to E_TABM_158.tsv")
 

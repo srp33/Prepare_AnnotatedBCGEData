@@ -6,7 +6,7 @@ set -o errexit
 # Build the Docker image
 #######################################################
 
-docker build -t inwosu/bc_data_curation_05 .
+docker build -t inwosu/bc_data_curation_04 .
 
 #######################################################
 # Run docker command
@@ -16,9 +16,9 @@ docker build -t inwosu/bc_data_curation_05 .
 #dockerCommand="docker run -i -t --rm \
 dockerCommand="docker run -i --rm \
     -u $(id -u):$(id -g) \
-    -v $(pwd):/5_process_non_affy_expr_data \
+    -v $(pwd):/4_process_non_affy_expr_data \
     -v $(pwd)/../Data:/Data \
-    inwosu/bc_data_curation_05"
+    inwosu/bc_data_curation_04"
 
 time $dockerCommand Rscript scripts/process_all.R
 

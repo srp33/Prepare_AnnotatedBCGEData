@@ -4,7 +4,7 @@ FROM bioconductor/bioconductor_docker:RELEASE_3_17
 RUN R -e 'BiocManager::install(c("tidyverse", "doppelgangR", "affy", "AnnotationDbi", "Biobase", "oligo", "GEOquery", "ggplot2"), force = TRUE)'
 RUN R -e 'BiocManager::install(c("pd.hugene.1.0.st.v1", "pd.huex.1.0.st.v2", "u133aaofav2cdf", "hgu95av2cdf", "hgu133acdf", "hgu133a2cdf", "hgu133plus2cdf", "hgu133bcdf"), force = TRUE)'
 
-WORKDIR /3_qualityControl_affy_expression_data
+WORKDIR /5_qualityControl
 
 
 # pd.hugene.1.0.st.v1   Affymetrix Human Gene 1.0 ST Array [transcript (gene) version]
