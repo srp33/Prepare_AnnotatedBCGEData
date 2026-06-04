@@ -65,3 +65,9 @@ print("Saved to U133_B.tsv")
 final_score_GSE6532_U133_Plus2 <- run_IQRray_multiple_chips("GSE6532", GSE6532_U133_Plus2_geo_accession)
 write_tsv(final_score_GSE6532_U133_Plus2, paste0(IQRray_file_path, "U133_Plus2_multiple_chip.tsv"))
 print("Saved to U133_Plus2_multiple_chip.tsv")
+
+# delete temporary download directory
+unlink("GSE1456", recursive = TRUE, force = TRUE)
+unlink("GSE3494", recursive = TRUE, force = TRUE)
+unlink("GSE4922", recursive = TRUE, force = TRUE)
+unlink("GSE6532", recursive = TRUE, force = TRUE)
