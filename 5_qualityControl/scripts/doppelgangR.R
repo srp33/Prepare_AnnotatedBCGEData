@@ -30,6 +30,8 @@ for (i in 1:length(file_paths)) {
     file_names <- basename(c(file_path1, file_path2)) %>%
       file_path_sans_ext() %>%
       file_path_sans_ext()
+  print(file_names)
+  stop("dkdkd")
 
     # By sorting, we make sure we don't have to process the same ones
     # with their names in reverse order.
