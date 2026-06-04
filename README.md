@@ -1,4 +1,4 @@
-# Curated Compendium of Breast Cancer Gene-Expression Datasets
+# Curated compendium of breast cancer gene-expression Datasets
 
 This repository contains the code used to prepare the datasets for [this collection](https://zenodo.org/communities/annnotatedbcgedata/about).
 
