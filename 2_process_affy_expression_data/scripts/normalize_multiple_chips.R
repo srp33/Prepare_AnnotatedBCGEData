@@ -35,67 +35,77 @@ SCAN_normalise <- function(gseID, annotation_package, probe_summary, output_file
     }
 }
 
-#process GSE1456
-GSE1456 <- getGEO("GSE1456")
-GSE1456_U133A_celfile <- pData(GSE1456[[1]]) %>%
-  mutate(geo_accession = str_c("/tmp/GSE1456_U133A/", geo_accession, ".CEL.gz")) %>%
-  pull(2)
-GSE1456_U133B_celfile  <- pData(GSE1456[[2]])  %>%
-  mutate(geo_accession = str_c("/tmp/GSE1456_U133B/", geo_accession, ".CEL.gz")) %>%
-  pull(2)
+gse1456_B_file_path <- paste0(normalized_data, "GSE1456_U133B.tsv.gz")
+gse3494_B_file_path <- paste0(normalized_data, "GSE3494_U133B.tsv.gz")
+gse4922_B_file_path <- paste0(normalized_data, "GSE4922_U133B.tsv.gz")
+gse6532_Plus2_file_path <- paste0(normalized_data, "GSE6532_U133Plus2.tsv.gz")
 
-unlink("GSE1456", recursive = TRUE, force = TRUE)
+if (!file.exists(gse1456_B_file_path)) {
+  #process GSE1456
+  GSE1456 <- getGEO("GSE1456")
+  GSE1456_U133A_celfile <- pData(GSE1456[[1]]) %>%
+    mutate(geo_accession = str_c("/tmp/GSE1456_U133A/", geo_accession, ".CEL.gz")) %>%
+    pull(2)
+  GSE1456_U133B_celfile  <- pData(GSE1456[[2]])  %>%
+    mutate(geo_accession = str_c("/tmp/GSE1456_U133B/", geo_accession, ".CEL.gz")) %>%
+    pull(2)
 
-#process GSE3494
-GSE3494_U133A_celfile <- getGSEDataTables("GSE3494")[[2]] %>%
-filter(`Affy platform` == "HG-U133A")  %>%
-  mutate(`GEO Sample Accession #` = str_c("/tmp/GSE3494_U133A/", `GEO Sample Accession #`, ".CEL.gz")) %>%
-  pull(1)
+  unlink("GSE1456", recursive = TRUE, force = TRUE)
+}
 
-GSE3494_U133B_celfile <- getGSEDataTables("GSE3494")[[2]] %>%
-  filter(`Affy platform` == "HG-U133B")  %>%
-  mutate(`GEO Sample Accession #` = str_c("/tmp/GSE3494_U133B/", `GEO Sample Accession #`, ".CEL.gz")) %>%
-  pull(1)
+if (!file.exists(gse3494_B_file_path)) {
+  #process GSE3494
+  GSE3494_U133A_celfile <- getGSEDataTables("GSE3494")[[2]] %>%
+  filter(`Affy platform` == "HG-U133A")  %>%
+    mutate(`GEO Sample Accession #` = str_c("/tmp/GSE3494_U133A/", `GEO Sample Accession #`, ".CEL.gz")) %>%
+    pull(1)
 
-unlink("GSE3494", recursive = TRUE, force = TRUE)
+  GSE3494_U133B_celfile <- getGSEDataTables("GSE3494")[[2]] %>%
+    filter(`Affy platform` == "HG-U133B")  %>%
+    mutate(`GEO Sample Accession #` = str_c("/tmp/GSE3494_U133B/", `GEO Sample Accession #`, ".CEL.gz")) %>%
+    pull(1)
 
-#process GSE4922
-GSE <- getGEOSuppFiles("GSE4922", filter_regex = "GSE4922_Clinical_file_for_both_Uppsala_Singapore_Samples.txt")
-GSE4922 <- rownames(GSE) %>%
-  read_tsv(col_names = TRUE) %>%
-  separate(1, into = c("gsmID_U133A", "gsmID_U133B"), sep = "/") %>%
-  mutate(gsmID_U133A = str_c("/tmp/GSE4922_U133A/", gsmID_U133A, ".CEL.gz"))  %>%
-  mutate(gsmID_U133B = str_c("/tmp/GSE4922_U133B/", gsmID_U133B, ".CEL.gz"))
+  unlink("GSE3494", recursive = TRUE, force = TRUE)
+}
 
-GSE4922_U133A_celfile <- pull(GSE4922, 1)
-GSE4922_U133B_celfile <- pull(GSE4922, 2)
+if (!file.exists(gse4922_B_file_path)) {
+  #process GSE4922
+  GSE <- getGEOSuppFiles("GSE4922", filter_regex = "GSE4922_Clinical_file_for_both_Uppsala_Singapore_Samples.txt")
+  GSE4922 <- rownames(GSE) %>%
+    read_tsv(col_names = TRUE) %>%
+    separate(1, into = c("gsmID_U133A", "gsmID_U133B"), sep = "/") %>%
+    mutate(gsmID_U133A = str_c("/tmp/GSE4922_U133A/", gsmID_U133A, ".CEL.gz"))  %>%
+    mutate(gsmID_U133B = str_c("/tmp/GSE4922_U133B/", gsmID_U133B, ".CEL.gz"))
 
-unlink("GSE4922", recursive = TRUE, force = TRUE)
+  GSE4922_U133A_celfile <- pull(GSE4922, 1)
+  GSE4922_U133B_celfile <- pull(GSE4922, 2)
 
-#process GSE6532
-GSE6532 <- getGEOSuppFiles("GSE6532", filter_regex = "GSE6532_LUMINAL_demo.txt.gz")
-GSE6532_U133A_celfile <- rownames(GSE6532) %>%
-  read_tsv(col_names = TRUE) %>%
-  mutate(`geo_accn_hg-u133a` = str_c("/tmp/GSE6532_U133A/", `geo_accn_hg-u133a`, ".CEL.gz")) %>%
-  pull(`geo_accn_hg-u133a`) %>%
-  na.omit()
+  unlink("GSE4922", recursive = TRUE, force = TRUE)
+}
 
-GSE6532_U133B_celfile <- rownames(GSE6532) %>%
-  read_tsv(col_names = TRUE) %>%
-  mutate(`geo_accn_hg-u133b` = str_c("/tmp/GSE6532_U133B/", `geo_accn_hg-u133b`, ".CEL.gz")) %>%
-  pull(`geo_accn_hg-u133b`) %>%
-  na.omit()
+if (!file.exists(gse6532_Plus2_file_path)) {
+  #process GSE6532
+  GSE6532 <- getGEOSuppFiles("GSE6532", filter_regex = "GSE6532_LUMINAL_demo.txt.gz")
+  GSE6532_U133A_celfile <- rownames(GSE6532) %>%
+    read_tsv(col_names = TRUE) %>%
+    mutate(`geo_accn_hg-u133a` = str_c("/tmp/GSE6532_U133A/", `geo_accn_hg-u133a`, ".CEL.gz")) %>%
+    pull(`geo_accn_hg-u133a`) %>%
+    na.omit()
 
-GSE6532_U133_2_celfile <- rownames(GSE6532) %>%
-  read_tsv(col_names = TRUE) %>%
-  mutate(`geo_accn_hg-u133plus2` = str_c("/tmp/GSE6532_U133Plus2/", `geo_accn_hg-u133plus2`, ".CEL.gz")) %>%
-  pull(`geo_accn_hg-u133plus2`) %>%
-  na.omit()
+  GSE6532_U133B_celfile <- rownames(GSE6532) %>%
+    read_tsv(col_names = TRUE) %>%
+    mutate(`geo_accn_hg-u133b` = str_c("/tmp/GSE6532_U133B/", `geo_accn_hg-u133b`, ".CEL.gz")) %>%
+    pull(`geo_accn_hg-u133b`) %>%
+    na.omit()
 
-unlink("GSE6532", recursive = TRUE, force = TRUE)
+  GSE6532_U133_2_celfile <- rownames(GSE6532) %>%
+    read_tsv(col_names = TRUE) %>%
+    mutate(`geo_accn_hg-u133plus2` = str_c("/tmp/GSE6532_U133Plus2/", `geo_accn_hg-u133plus2`, ".CEL.gz")) %>%
+    pull(`geo_accn_hg-u133plus2`) %>%
+    na.omit()
 
-#format to run function
-#SCAN_normalise <- function(gseID, annotation_package, probe_summary, output_filename, celFilePaths)
+  unlink("GSE6532", recursive = TRUE, force = TRUE)
+}
 
 SCAN_normalise("GSE1456", "pd.hg.u133a", "hgu133ahsentrezgprobe", "GSE1456_U133A", GSE1456_U133A_celfile)
 SCAN_normalise("GSE1456", "pd.hg.u133b", "hgu133bhsentrezgprobe", "GSE1456_U133B", GSE1456_U133B_celfile)

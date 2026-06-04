@@ -22,7 +22,7 @@ if (!dir.exists(normalized_data)) {
 }
 
 source("scripts/filter_chips.R")
-#source("scripts/normalize_E_TABM_158.R")
-#source("scripts/normalize_GSE23720.R")
-#source("scripts/normalize_single_chips.R")
+source("scripts/normalize_E_TABM_158.R")
+source("scripts/normalize_GSE23720.R")
+source("scripts/normalize_single_chips.R")
 source("scripts/normalize_multiple_chips.R")
