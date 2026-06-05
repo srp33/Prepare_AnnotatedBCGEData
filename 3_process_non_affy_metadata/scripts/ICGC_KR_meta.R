@@ -63,7 +63,8 @@ combined_df <- read_tsv(tmp_file_path) %>%
                 -tumour_grade_supplemental,
                 -tumour_stage_supplemental,
                 -digital_image_of_stained_section,
-                -percentage_cellularity)
+                -percentage_cellularity) %>%
+  distinct()
 
 #summarise metadata variables
 varSummary <- summariseVariables(combined_df)

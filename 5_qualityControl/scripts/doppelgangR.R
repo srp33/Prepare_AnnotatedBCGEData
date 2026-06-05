@@ -19,7 +19,17 @@ makeExprs <- function(file_path, metadata) {
     metadata <- dplyr::select(metadata, -Sample_ID) %>%
       as.data.frame()
     rownames(metadata) <- sampleIDs
+
+    sampleIDs <- intersect(sampleIDs, colnames(data_matrix))
+
+    if (length(sampleIDs) < 5) {
+      stop("There are few, if any, matching samples between the metadata and expression data.")
+    }
+
+    metadata <- metadata[sampleIDs, , drop = FALSE]
     metadata <- AnnotatedDataFrame(metadata)
+
+    data_matrix <- data_matrix[,sampleIDs]
 
     data_expr <- ExpressionSet(assayData = data_matrix, phenoData = metadata)
   }
@@ -79,10 +89,32 @@ for (i in 1:length(file_paths)) {
         names(dopple_data) <- dataset_ids
 
         # result <- doppelgangR(dopple_data, phenoFinder.args = NULL, BPPARAM = SerialParam())
-        result <- doppelgangR(dopple_data, automatic.smokingguns = TRUE, BPPARAM = MulticoreParam(workers = 16))
+        #result <- doppelgangR(dopple_data, phenoFinder.args = NULL, automatic.smokingguns = TRUE, BPPARAM = MulticoreParam(workers = 16))
+        #result <- doppelgangR(dopple_data, automatic.smokingguns = TRUE, BPPARAM = MulticoreParam(workers = 16))
 
-        result_summary <- summary(result)
-        write_tsv(result_summary, out_file_path)
+        result <- tryCatch(
+        {
+          message("Attempting with default for phenoFinder.args.")
+          doppelgangR(
+            dopple_data,
+            automatic.smokingguns = TRUE,
+            BPPARAM = MulticoreParam(workers = 16)
+          )
+        },
+        error = function(e) {
+          message("doppelgangR failed with phenoFinder.args.")
+          message("Original error: ", conditionMessage(e))
+          message("Retrying with phenoFinder.args = NULL")
+
+          doppelgangR(
+            dopple_data,
+            phenoFinder.args = NULL,
+            automatic.smokingguns = TRUE,
+            BPPARAM = MulticoreParam(workers = 16)
+          )
+        })
+
+        write_tsv(summary(result), out_file_path)
     }
 
     done_this_time <- c(done_this_time, out_file_path)

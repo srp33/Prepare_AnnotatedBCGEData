@@ -29,15 +29,10 @@ if (!dir.exists(meta_expr_matched_data)) {
   dir.create(meta_expr_matched_data)
 }
 
-analysis_ready_data <- "/Data/analysis_ready_expression_data/"
-if (!dir.exists(analysis_ready_data)) {
-  dir.create(analysis_ready_data)
-}
 
-source("scripts/clean_expression_data_colnames.R")
 source("scripts/IQRray_filter_samples.R")
-source("scripts/match_data.R")
-source("scripts/add_gene_symbol.R")
+#source("scripts/match_data.R")
+##source("scripts/add_gene_symbol.R")
 source("scripts/merge_metadata_summaries.R")
 
 unlink(clean_colnames_expr_data, recursive = TRUE, force = TRUE)
