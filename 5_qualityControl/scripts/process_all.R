@@ -9,14 +9,14 @@ library(Biobase)
 library(oligo)
 library(GEOquery)
 
-library("pd.hugene.1.0.st.v1")
-library("pd.huex.1.0.st.v2")
-library("u133aaofav2cdf")
-library("hgu95av2cdf")
-library("hgu133acdf")
-library("hgu133a2cdf")
-library("hgu133plus2cdf")
-library("hgu133bcdf")
+library(pd.hugene.1.0.st.v1)
+library(pd.huex.1.0.st.v2)
+library(u133aaofav2cdf)
+library(hgu95av2cdf)
+library(hgu133acdf)
+library(hgu133a2cdf)
+library(hgu133plus2cdf)
+library(hgu133bcdf)
 
 # This setting helps with the process very large files.
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 10000)
@@ -48,9 +48,8 @@ if (!dir.exists("/Data/analysis_ready_expression_data")) {
   dir.create("/Data/analysis_ready_expression_data")
 }
 
-doppel_dir <- "/Data/doppelgangR_results/"
-if (!dir.exists(doppel_dir)) {
-  dir.create(doppel_dir)
+if (!dir.exists("/Data/doppelgangR_results")) {
+  dir.create("/Data/doppelgangR_results")
 }
 
 if (!dir.exists("/Data/IQRray_results")) {

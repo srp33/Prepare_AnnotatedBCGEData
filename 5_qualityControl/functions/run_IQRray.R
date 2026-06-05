@@ -1,8 +1,7 @@
 # function to run the IQRray function across multiple datasets
 
 # IQray on single chips
-run_IQRray <- function(gseID) {
-
+run_IQRray <- function(gseID, use_oligo_annotations) {
   # Define the file path to a temp directory for saving RAW data
   tmp_dir <- paste0("/tmp/", gseID)
   dir.create(tmp_dir)
@@ -15,7 +14,7 @@ run_IQRray <- function(gseID) {
 
   celFilePaths <- list.files(tmp_dir, pattern = "*.CEL", full.names = T, ignore.case = T)
 
-  if (gseID %in% oligo_arrays) {
+  if (use_oligo_annotations) {
     my_data <- read.celfiles(filenames = celFilePaths)
     IQR_score <- IQRray_oligo(my_data) %>%
       as_tibble(rownames = "celfileID")

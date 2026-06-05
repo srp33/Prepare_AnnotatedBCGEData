@@ -57,7 +57,7 @@ for (i in 1:length(file_paths)) {
     # By sorting, we make sure we don't have to process the same ones
     # with their names in reverse order.
     combined_names <- paste0(sort(dataset_ids), collapse = "_")
-    out_file_path <- paste0(doppel_dir, combined_names, ".tsv")
+    out_file_path <- paste0("/Data/doppelgangR_results/", combined_names, ".tsv")
 
     if (file.exists(out_file_path)) {
       if (!(out_file_path %in% done_this_time)) {
