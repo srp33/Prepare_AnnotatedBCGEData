@@ -1,26 +1,24 @@
-# Identify directory where input variable (normalized data) is stored
-datadir <- "/Data/expression_data"
-metadata_dir <- "/Data/prelim_metadata"
+datadir <- "/Data/expression_data4"
+metadata_dir <- "/Data/prelim_metadata2"
 
 # Turn a dataset into an ExpressionSet
 makeExprs <- function(file_path, metadata) {
-  GSEdata <- read_tsv(file_path) %>%
-    rename_with(~str_replace_all(., "_.+", ""))
+  expr_data <- read_tsv(file_path)
 
-  gene_names <- pull(GSEdata, Gene)
-  GSEdata <- dplyr::select(GSEdata, -Gene)
-  data_matrix <- as.matrix(GSEdata)
-  rownames(data_matrix) <- gene_names
+  gene_names <- pull(expr_data, Entrez_Gene_ID)
+  expr_data <- dplyr::select(expr_data, -Dataset_ID, -Entrez_Gene_ID, -Ensembl_Gene_ID, -HGNC_Symbol, -Chromosomal_Band) %>%
+      as.matrix()
+  rownames(expr_data) <- gene_names
 
   if (is.null(metadata)) {
-    data_expr <- ExpressionSet(assayData = data_matrix)
+    eSet <- ExpressionSet(assayData = expr_data)
   } else {
     sampleIDs <- dplyr::pull(metadata, Sample_ID)
     metadata <- dplyr::select(metadata, -Sample_ID) %>%
       as.data.frame()
     rownames(metadata) <- sampleIDs
 
-    sampleIDs <- intersect(sampleIDs, colnames(data_matrix))
+    sampleIDs <- intersect(sampleIDs, colnames(expr_data))
 
     if (length(sampleIDs) < 5) {
       stop("There are few, if any, matching samples between the metadata and expression data.")
@@ -29,13 +27,15 @@ makeExprs <- function(file_path, metadata) {
     metadata <- metadata[sampleIDs, , drop = FALSE]
     metadata <- AnnotatedDataFrame(metadata)
 
-    data_matrix <- data_matrix[,sampleIDs]
+    expr_data <- expr_data[,sampleIDs]
 
-    data_expr <- ExpressionSet(assayData = data_matrix, phenoData = metadata)
+    eSet <- ExpressionSet(assayData = expr_data, phenoData = metadata)
   }
+
+  return(eSet)
 }
 
-# Run dopplegangR using pairwise comparisons of datasets
+# Run dopplegangR for pairwise comparisons of datasets.
 file_paths <- list.files(datadir, full.names = T)
 
 done_this_time <- c()
@@ -89,8 +89,6 @@ for (i in 1:length(file_paths)) {
         names(dopple_data) <- dataset_ids
 
         # result <- doppelgangR(dopple_data, phenoFinder.args = NULL, BPPARAM = SerialParam())
-        #result <- doppelgangR(dopple_data, phenoFinder.args = NULL, automatic.smokingguns = TRUE, BPPARAM = MulticoreParam(workers = 16))
-        #result <- doppelgangR(dopple_data, automatic.smokingguns = TRUE, BPPARAM = MulticoreParam(workers = 16))
 
         result <- tryCatch(
         {

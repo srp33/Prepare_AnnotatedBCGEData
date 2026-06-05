@@ -1,4 +1,3 @@
-
 # function to run the IQRray function across multiple datasets
 
 # IQray on single chips
@@ -36,7 +35,6 @@ run_IQRray <- function(gseID) {
 
 # IQray on multiple chips
 run_IQRray_multiple_chips <- function(gseID, geo_accession) {
-
   # Define the file path to a temp directory for saving RAW data
   tmp_dir <- paste0("/tmp/", gseID)
   dir.create(tmp_dir)
