@@ -1,5 +1,3 @@
-## script to run IQRray for single chips
-
 IQRay_file <- NULL
 for (gseID in huExon$gseID) {
 final_score <- run_IQRray(gseID)
@@ -9,7 +7,7 @@ final_score <- run_IQRray(gseID)
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "huExon.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/huExon.tsv")
 print("Saved to huExon.tsv")
 
 IQRay_file <- NULL
@@ -21,7 +19,7 @@ for (gseID in huGene$gseID) {
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "huGene.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/huGene.tsv")
 print("Saved to huGene.tsv")
 
 IQRay_file <- NULL
@@ -33,7 +31,7 @@ final_score <- run_IQRray(gseID)
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "U95_2.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/U95_2.tsv")
 print("Saved to U95_2.tsv")
 
 IQRay_file <- NULL
@@ -45,7 +43,7 @@ final_score <- run_IQRray(gseID)
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "U133A_Early_Access.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/U133A_Early_Access.tsv")
 print("Saved to U133A_Early_Access.tsv")
 
 IQRay_file <- NULL
@@ -57,7 +55,7 @@ final_score <- run_IQRray(gseID)
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "U133_A.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/U133_A.tsv")
 print("Saved to U133_A.tsv")
 
 IQRay_file <- NULL
@@ -69,7 +67,7 @@ final_score <- run_IQRray(gseID)
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "U133_A2.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/U133_A2.tsv")
 print("Saved to U133_A2.tsv")
 
 IQRay_file <- NULL
@@ -81,5 +79,5 @@ final_score <- run_IQRray(gseID)
     IQRay_file <- rbind(IQRay_file, final_score)
   }
 }
-write_tsv(IQRay_file, paste0(IQRray_file_path, "U133_plus_2.tsv"))
+write_tsv(IQRay_file, "/Data/IQRray_results/U133_plus_2.tsv")
 print("Saved to U133_plus_2.tsv")

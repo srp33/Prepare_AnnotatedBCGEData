@@ -54,9 +54,8 @@ if (!dir.exists(doppel_dir)) {
   dir.create(doppel_dir)
 }
 
-IQRray_file_path <- "/Data/IQRray_results/"
-if (!dir.exists(IQRray_file_path)) {
-  dir.create(IQRray_file_path)
+if (!dir.exists("/Data/IQRray_results")) {
+  dir.create("/Data/IQRray_results")
 }
 
 #source("scripts/clean_expression_data_colnames.R")

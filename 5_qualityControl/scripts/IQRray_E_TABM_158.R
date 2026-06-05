@@ -4,7 +4,7 @@ if (!dir.exists(base_dir)) {
   dir.create(base_dir)
 }
 
-out_file_path <- paste0(IQRray_file_path, "E_TABM_158.tsv")
+out_file_path <- "/Data/IQRray_results/E_TABM_158.tsv"
 
 if (file.exists(out_file_path)) {
   print(paste0(out_file_path, " already exists."))

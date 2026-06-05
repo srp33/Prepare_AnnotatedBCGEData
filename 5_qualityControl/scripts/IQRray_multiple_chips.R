@@ -50,7 +50,7 @@ final_score_GSE4922_U133A <- run_IQRray_multiple_chips("GSE4922", GSE4922_U133A_
 final_score_GSE6532_U133A <- run_IQRray_multiple_chips("GSE6532", GSE6532_U133A_geo_accession)
 
 big_IQR_file_U133A <- do.call("rbind", list(final_score_GSE1456_U133A, final_score_GSE3494_U133A, final_score_GSE4922_U133A, final_score_GSE6532_U133A))
-write_tsv(big_IQR_file_U133A, paste0(IQRray_file_path, "U133_A_multiple_chip.tsv"))
+write_tsv(big_IQR_file_U133A, "/Data/IQRray_results/U133_A_multiple_chip.tsv")
 print("Saved to U133_A_multiple_chip.tsv")
 
 final_score_GSE1456_U133B <- run_IQRray_multiple_chips("GSE1456", GSE1456_U133B_geo_accession)
@@ -59,11 +59,11 @@ final_score_GSE4922_U133B <- run_IQRray_multiple_chips("GSE4922", GSE4922_U133B_
 final_score_GSE6532_U133B <- run_IQRray_multiple_chips("GSE6532", GSE6532_U133B_geo_accession)
 
 big_IQR_file_U133B <- do.call("rbind", list(final_score_GSE1456_U133B, final_score_GSE3494_U133B, final_score_GSE4922_U133B, final_score_GSE6532_U133B))
-write_tsv(big_IQR_file_U133B, paste0(IQRray_file_path, "U133_B.tsv"))
+write_tsv(big_IQR_file_U133B, "/Data/IQRray_results/U133_B.tsv")
 print("Saved to U133_B.tsv")
 
 final_score_GSE6532_U133_Plus2 <- run_IQRray_multiple_chips("GSE6532", GSE6532_U133_Plus2_geo_accession)
-write_tsv(final_score_GSE6532_U133_Plus2, paste0(IQRray_file_path, "U133_Plus2_multiple_chip.tsv"))
+write_tsv(final_score_GSE6532_U133_Plus2, "/Data/IQRray_results/U133_Plus2_multiple_chip.tsv")
 print("Saved to U133_Plus2_multiple_chip.tsv")
 
 # delete temporary download directory
