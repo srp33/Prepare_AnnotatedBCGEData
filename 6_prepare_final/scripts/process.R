@@ -14,11 +14,6 @@ if (!dir.exists(clean_colnames_expr_data)) {
   dir.create(clean_colnames_expr_data)
 }
 
-IQRray_filtered <- "/Data/IQRray_filtered_data/"
-if (!dir.exists(IQRray_filtered)) {
-  dir.create(IQRray_filtered)
-}
-
 final_meta <- "/Data/analysis_ready_metadata/"
 if (!dir.exists(final_meta)) {
   dir.create(final_meta)
