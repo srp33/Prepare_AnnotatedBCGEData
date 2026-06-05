@@ -67,7 +67,7 @@ source("functions/bind_IQR_file.R")
 # Separates datasets by array type
 source("scripts/filter_chips.R")
 
-#source("scripts/doppelgangR.R")
+source("scripts/doppelgangR.R")
 ###source("scripts/merge_doppel_results.R")
 
 #source("scripts/IQRray_E_TABM_158.R")
