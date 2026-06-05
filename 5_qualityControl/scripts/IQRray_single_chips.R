@@ -1,5 +1,3 @@
-## script to run IQRray for single chips
-
 IQRay_file <- NULL
 for (gseID in huExon$gseID) {
 final_score <- run_IQRray(gseID)

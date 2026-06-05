@@ -1,4 +1,3 @@
-
 bind_file <- function(IQRay_file, final_score) {
   if (is.null(IQRay_file)) {
     IQRay_file <- final_score

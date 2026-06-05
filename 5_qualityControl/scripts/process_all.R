@@ -1,23 +1,22 @@
 library(tidyverse)
 library(tools)
-#library(doppelgangR)
+library(doppelgangR)
 library(ggplot2)
-#library(affy)
+library(affy)
 library(methods)
 library(AnnotationDbi)
 library(Biobase)
-#library(oligo)
-#library(GEOquery)
-##library(biomaRt)
+library(oligo)
+library(GEOquery)
 
-#library("pd.hugene.1.0.st.v1")
-#library("pd.huex.1.0.st.v2")
-#library("u133aaofav2cdf")
-#library("hgu95av2cdf")
-#library("hgu133acdf")
-#library("hgu133a2cdf")
-#library("hgu133plus2cdf")
-#library("hgu133bcdf")
+library("pd.hugene.1.0.st.v1")
+library("pd.huex.1.0.st.v2")
+library("u133aaofav2cdf")
+library("hgu95av2cdf")
+library("hgu133acdf")
+library("hgu133a2cdf")
+library("hgu133plus2cdf")
+library("hgu133bcdf")
 
 # This setting helps with the process very large files.
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 10000)
@@ -59,20 +58,20 @@ if (!dir.exists(IQRray_file_path)) {
   dir.create(IQRray_file_path)
 }
 
+source("functions/compute_IQRray.R")
+source("functions/run_IQRray.R")
+source("functions/bind_IQR_file.R")
+
 #source("scripts/clean_expression_data_colnames.R")
 #source("scripts/match_expr_data_and_metadata.R")
 #source("scripts/add_gene_identifiers.R")
 
 # Separates datasets by array type
-#source("scripts/filter_chips.R")
+source("scripts/filter_chips.R")
 
-# Define functions
-source("functions/compute_IQRray.R")
-source("functions/run_IQRray.R")
-source("functions/bind_IQR_file.R")
+#source("scripts/doppelgangR.R")
+###source("scripts/merge_doppel_results.R")
 
-source("scripts/doppelgangR.R")
-#source("scripts/merge_doppel_results.R")
 #source("scripts/IQRray_E_TABM_158.R")
-#source("scripts/IQRray_single_chips.R")
+source("scripts/IQRray_single_chips.R")
 #source("scripts/IQRray_multiple_chips.R")

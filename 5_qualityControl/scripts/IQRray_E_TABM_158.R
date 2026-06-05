@@ -37,7 +37,7 @@ if (file.exists(out_file_path)) {
     dplyr::select(gseID, gsmID, celfileID, value)
 
   write_tsv(joint_cols, out_file_path)
-  print("Saved to E_TABM_158.tsv")
+  print(paste("Saved to ", out_file_path))
 
   unlink(base_dir, recursive = TRUE, force = TRUE)
 }

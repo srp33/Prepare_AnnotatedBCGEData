@@ -1,6 +1,3 @@
-
-# function computing arIQR quality score for oligo arrays
-
 IQRray_oligo <- function(data) {
   # obtaining intensity values for perfect match (pm) probes
   pm_data <- oligo::pm(data)
