@@ -18,7 +18,7 @@ all_initial = bind_rows(categorical_initial, numeric_initial)
 
 all_fields_values = NULL
 
-for (metadata_file_path in list.files(path = "../Data/prelim_metadata", full.names = TRUE)) {
+for (metadata_file_path in list.files(path = "../Data/prelim_metadata2", full.names = TRUE)) {
   dataset = basename(metadata_file_path)
   dataset = sub(".tsv", "", dataset)
   

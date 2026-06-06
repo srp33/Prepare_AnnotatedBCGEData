@@ -21,7 +21,7 @@ identifier_rows = dplyr::filter(categorical_all, str_detect(NCIT_values, "C25364
 test_dataset <- NULL
 # test_dataset <- "GSE20194"
 
-for (metadata_file_path in list.files(path = "../Data/prelim_metadata", full.names = TRUE)) {
+for (metadata_file_path in list.files(path = "../Data/prelim_metadata2", full.names = TRUE)) {
   this_dataset = basename(metadata_file_path)
   this_dataset = sub(".tsv", "", this_dataset)
 

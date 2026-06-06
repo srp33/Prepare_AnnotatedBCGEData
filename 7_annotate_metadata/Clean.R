@@ -41,7 +41,7 @@ categorical = dplyr::filter(categorical, str_detect(NCIT_values, "C25364", negat
 # Get the unique values for all fields.
 all_fields = NULL
 
-for (metadata_file_path in list.files(path = "../Data/prelim_metadata", full.names = TRUE)) {
+for (metadata_file_path in list.files(path = "../Data/prelim_metadata2", full.names = TRUE)) {
   this_dataset = basename(metadata_file_path)
   this_dataset = sub(".tsv", "", this_dataset)
   
@@ -105,9 +105,6 @@ all = bind_rows(numeric, date, identifier, categorical) %>%
   mutate(Value_Ontology_Terms = str_trim(Value_Ontology_Terms)) %>%
   mutate(Basic_Data_Type_Ontology_Term = str_trim(Basic_Data_Type_Ontology_Term)) %>%
   mutate(Curatorial_Comments = str_trim(Curatorial_Comments)) %>%
-  mutate(Value_Ontology_Terms = if_else(Original_Value == "NA", "Not Applicable (C48660)", Value_Ontology_Terms)) %>%
-  mutate(Basic_Data_Type_Ontology_Term = if_else(Value_Ontology_Terms == "Not Applicable (C48660)", "Null (C47840)", Basic_Data_Type_Ontology_Term)) %>%
-  mutate(Basic_Data_Type_Ontology_Term = if_else(Value_Ontology_Terms == "Unknown (C17998)", "Null (C47840)", Basic_Data_Type_Ontology_Term)) %>%
   mutate(
     Basic_Data_Type_Ontology_Term = case_when(
       Basic_Data_Type_Ontology_Term == "Numeric" &
@@ -125,6 +122,10 @@ all = bind_rows(numeric, date, identifier, categorical) %>%
       TRUE ~ Basic_Data_Type_Ontology_Term
     )
   ) %>%
+  mutate(Value_Ontology_Terms = if_else(Original_Value == "NA", "Not Applicable (C48660)", Value_Ontology_Terms)) %>%
+  mutate(Basic_Data_Type_Ontology_Term = if_else(Value_Ontology_Terms == "Not Applicable (C48660)", "Null (C47840)", Basic_Data_Type_Ontology_Term)) %>%
+  mutate(Basic_Data_Type_Ontology_Term = if_else(Value_Ontology_Terms == "Unknown (C17998)", "Null (C47840)", Basic_Data_Type_Ontology_Term)) %>%
+  mutate(Value_Ontology_Terms = if_else(Basic_Data_Type_Ontology_Term == "Null (C47840)", "Not Applicable (C48660)||Or (C37998)||Unknown (C17998)", Basic_Data_Type_Ontology_Term)) %>%
   arrange(Field_Name_Ontology_Terms, Value_Ontology_Terms, Original_Field_Name)
 
 # Check for values that should be identifier or numeric but aren't.
