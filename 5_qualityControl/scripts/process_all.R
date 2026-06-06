@@ -8,6 +8,7 @@ library(AnnotationDbi)
 library(Biobase)
 library(oligo)
 library(GEOquery)
+library(doParallel)
 
 library(pd.hugene.1.0.st.v1)
 library(pd.huex.1.0.st.v2)
@@ -64,12 +65,11 @@ source("functions/bind_IQR_file.R")
 #source("scripts/match_expr_data_and_metadata.R")
 #source("scripts/add_gene_identifiers.R")
 
-# Separates datasets by array type
-source("scripts/filter_chips.R")
-
 source("scripts/doppelgangR.R")
+stop("got here - process_all")
 ###source("scripts/merge_doppel_results.R")
 
+source("scripts/filter_chips.R")
 #source("scripts/IQRray_E_TABM_158.R")
 source("scripts/IQRray_single_chips.R")
 #source("scripts/IQRray_multiple_chips.R")

@@ -35,88 +35,92 @@ makeExprs <- function(file_path, metadata) {
   return(eSet)
 }
 
+processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metadata_file_path1, metadata_file_path2, out_file_path) {
+  if (file.exists(out_file_path)) {
+    print(paste0(out_file_path, " already exists"))
+  } else {
+    metadata1 <- read_tsv(metadata_file_path1) %>%
+      dplyr::select(-Dataset_ID, -Platform_ID)
+    metadata2 <- read_tsv(metadata_file_path2) %>%
+      dplyr::select(-Dataset_ID, -Platform_ID)
+
+    if (ncol(metadata1) == 0 | ncol(metadata2) == 0) {
+      metadata1 <- NULL
+      metadata2 <- NULL
+    }
+
+    print(paste0("Reading in ", file_path1, "!"))
+    print(paste0("Reading in ", file_path2, "!"))
+
+    eSet1 <- makeExprs(file_path1, metadata1)
+    eSet2 <- makeExprs(file_path2, metadata2)
+
+    dopple_data <- list(eSet1, eSet2)
+    names(dopple_data) <- c(dataset_id1, dataset_id2)
+
+    result <- tryCatch(
+    {
+      message("Attempting with default for phenoFinder.args.")
+      doppelgangR(
+        dopple_data,
+        automatic.smokingguns = TRUE,
+        BPPARAM = SerialParam()#MulticoreParam(workers = 16)
+      )
+    },
+    error = function(e) {
+      message("doppelgangR failed with phenoFinder.args.")
+      message("Original error: ", conditionMessage(e))
+      message("Retrying with phenoFinder.args = NULL")
+
+      doppelgangR(
+        dopple_data,
+        phenoFinder.args = NULL,
+        automatic.smokingguns = TRUE,
+        BPPARAM = SerialParam()#MulticoreParam(workers = 16)
+      )
+    })
+
+    write_tsv(summary(result), out_file_path)
+  }
+}
+
+# Enable parallelization
+num_parallel = 8
+registerDoParallel(num_parallel)
+stopifnot(foreach::getDoParWorkers() == num_parallel)
+
 # Run dopplegangR for pairwise comparisons of datasets.
 file_paths <- list.files(datadir, full.names = T)
 
-done_this_time <- c()
+# Get all unique pairs.
+pairs <- as.data.frame(
+  t(combn(file_paths, 2)),
+  stringsAsFactors = FALSE
+)
 
-for (i in 1:length(file_paths)) {
-  file_path1 <- file_paths[i]
+set.seed(0)
 
-  for (j in 1:length(file_paths)) {
-    file_path2 <- file_paths[j]
+colnames(pairs) <- c("file_path1", "file_path2")
+pairs <- mutate(pairs, dataset_id1 = basename(file_path1)) %>%
+  mutate(dataset_id2 = basename(file_path2)) %>%
+  mutate(dataset_id1 = str_replace(dataset_id1, "\\.tsv\\.gz", "")) %>%
+  mutate(dataset_id2 = str_replace(dataset_id2, "\\.tsv\\.gz", "")) %>%
+  mutate(metadata_file_path1 = str_c(metadata_dir, "/", dataset_id1, ".tsv")) %>%
+  mutate(metadata_file_path2 = str_c(metadata_dir, "/", dataset_id2, ".tsv")) %>%
+  mutate(out_file_path = str_c("/Data/doppelgangR_results/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
+  slice_sample(prop = 1)
 
-    if (file_path1 == file_path2) {
-      next
-    }
+foreach (i = 1:nrow(pairs)) %dopar% {
+  row <- as.vector(as.matrix(pairs[i,]))
+  file_path1 <- row[1]
+  file_path2 <- row[2]
+  dataset_id1 <- row[3]
+  dataset_id2 <- row[4]
+  metadata_file_path1 <- row[5]
+  metadata_file_path2 <- row[6]
+  out_file_path <- row[7]
 
-    dataset_ids <- basename(c(file_path1, file_path2)) %>%
-      file_path_sans_ext() %>%
-      file_path_sans_ext()
-
-    # By sorting, we make sure we don't have to process the same ones
-    # with their names in reverse order.
-    combined_names <- paste0(sort(dataset_ids), collapse = "_")
-    out_file_path <- paste0("/Data/doppelgangR_results/", combined_names, ".tsv")
-
-    if (file.exists(out_file_path)) {
-      if (!(out_file_path %in% done_this_time)) {
-        print(paste0(out_file_path, " already exists"))
-      }
-    } else {
-        metadata_file_path1 <- paste0(metadata_dir, "/", dataset_ids[1], ".tsv")
-        metadata_file_path2 <- paste0(metadata_dir, "/", dataset_ids[2], ".tsv")
-
-        metadata1 <- read_tsv(metadata_file_path1) %>%
-          dplyr::select(-Dataset_ID, -Platform_ID)
-        metadata2 <- read_tsv(metadata_file_path2) %>%
-          dplyr::select(-Dataset_ID, -Platform_ID)
-
-        if (ncol(metadata1) == 0 | ncol(metadata2) == 0) {
-          metadata1 <- NULL
-          metadata2 <- NULL
-        }
-
-        cat("\n")
-        print(paste0("Reading in ", file_path1, "!"))
-        print(paste0("Reading in ", file_path2, "!"))
-        cat("\n")
-
-        eSet1 <- makeExprs(file_path1, metadata1)
-        eSet2 <- makeExprs(file_path2, metadata2)
-
-        dopple_data <- list(eSet1, eSet2)
-        names(dopple_data) <- dataset_ids
-
-        # result <- doppelgangR(dopple_data, phenoFinder.args = NULL, BPPARAM = SerialParam())
-
-        result <- tryCatch(
-        {
-          message("Attempting with default for phenoFinder.args.")
-          doppelgangR(
-            dopple_data,
-            automatic.smokingguns = TRUE,
-            BPPARAM = MulticoreParam(workers = 16)
-          )
-        },
-        error = function(e) {
-          message("doppelgangR failed with phenoFinder.args.")
-          message("Original error: ", conditionMessage(e))
-          message("Retrying with phenoFinder.args = NULL")
-
-          doppelgangR(
-            dopple_data,
-            phenoFinder.args = NULL,
-            automatic.smokingguns = TRUE,
-            BPPARAM = MulticoreParam(workers = 16)
-          )
-        })
-
-        write_tsv(summary(result), out_file_path)
-    }
-
-    done_this_time <- c(done_this_time, out_file_path)
-  }
+  processCombo(file_path1, file_path2, dataset_id1, dataset_id2, metadata_file_path1, metadata_file_path2, out_file_path)
 }
 
 unlink("cache", recursive = TRUE, force = TRUE)

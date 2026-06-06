@@ -56,9 +56,9 @@ for (file_path in file_paths) {
   expr_data <- inner_join(gene_annotations, expr_data, by = join_column) %>%
     dplyr::select(Dataset_ID, Entrez_Gene_ID, Ensembl_Gene_ID, HGNC_Symbol, Chromosomal_Band, everything())
 
-  group_by(expr_data, Ensembl_Gene_ID) %>% summarize(Count = n()) %>% filter(Count > 1) %>% print()
-  group_by(expr_data, Entrez_Gene_ID) %>% summarize(Count = n()) %>% filter(Count > 1) %>% print()
-  group_by(expr_data, HGNC_Symbol) %>% summarize(Count = n()) %>% filter(Count > 1) %>% print()
+  group_by(expr_data, Ensembl_Gene_ID) %>% dplyr::summarize(Count = n()) %>% dplyr::filter(Count > 1) %>% print()
+  group_by(expr_data, Entrez_Gene_ID) %>% dplyr::summarize(Count = n()) %>% dplyr::filter(Count > 1) %>% print()
+  group_by(expr_data, HGNC_Symbol) %>% dplyr::summarize(Count = n()) %>% dplyr::filter(Count > 1) %>% print()
 
   expr_data <- arrange(expr_data, Entrez_Gene_ID)
  
