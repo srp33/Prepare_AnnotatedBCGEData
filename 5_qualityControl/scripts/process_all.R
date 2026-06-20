@@ -2,22 +2,22 @@ library(tidyverse)
 library(tools)
 library(doppelgangR)
 library(ggplot2)
-library(affy)
-library(methods)
-library(AnnotationDbi)
-library(Biobase)
-library(oligo)
-library(GEOquery)
+#library(affy)
+#library(methods)
+#library(AnnotationDbi)
+#library(Biobase)
+#library(oligo)
+#library(GEOquery)
 library(doParallel)
 
-library(pd.hugene.1.0.st.v1)
-library(pd.huex.1.0.st.v2)
-library(u133aaofav2cdf)
-library(hgu95av2cdf)
-library(hgu133acdf)
-library(hgu133a2cdf)
-library(hgu133plus2cdf)
-library(hgu133bcdf)
+#library(pd.hugene.1.0.st.v1)
+#library(pd.huex.1.0.st.v2)
+#library(u133aaofav2cdf)
+#library(hgu95av2cdf)
+#library(hgu133acdf)
+#library(hgu133a2cdf)
+#library(hgu133plus2cdf)
+#library(hgu133bcdf)
 
 # This setting helps with the process very large files.
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 10000)
@@ -49,8 +49,16 @@ if (!dir.exists("/Data/analysis_ready_expression_data")) {
   dir.create("/Data/analysis_ready_expression_data")
 }
 
-if (!dir.exists("/Data/doppelgangR_results")) {
-  dir.create("/Data/doppelgangR_results")
+if (!dir.exists("/Data/doppelgangR_smokinggun")) {
+  dir.create("/Data/doppelgangR_smokinggun")
+}
+
+if (!dir.exists("/Data/doppelgangR_metadata")) {
+  dir.create("/Data/doppelgangR_metadata")
+}
+
+if (!dir.exists("/Data/doppelgangR_expr_data")) {
+  dir.create("/Data/doppelgangR_expr_data")
 }
 
 if (!dir.exists("/Data/IQRray_results")) {

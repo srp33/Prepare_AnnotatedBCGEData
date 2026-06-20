@@ -1,8 +1,7 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_23
 
-RUN R -e 'BiocManager::install(c("tidyverse", "AnnotationDbi", "Biobase", "doppelgangR", "affy", "oligo", "GEOquery"), force = TRUE)'
+RUN R -e 'BiocManager::install(c("tidyverse", "AnnotationDbi", "Biobase", "doppelgangR", "affy", "oligo", "GEOquery", "doParallel"), force = TRUE)'
 RUN R -e 'BiocManager::install(c("pd.hugene.1.0.st.v1", "pd.huex.1.0.st.v2", "u133aaofav2cdf", "hgu95av2cdf", "hgu133acdf", "hgu133a2cdf", "hgu133plus2cdf", "hgu133bcdf"), force = TRUE)'
-RUN R -e 'BiocManager::install(c("doParallel"), force = TRUE)'
 
 WORKDIR /5_qualityControl
 
