@@ -1,5 +1,3 @@
-# function to run the IQRray function across multiple datasets
-
 # IQray on single chips
 run_IQRray <- function(gseID, use_oligo_annotations) {
   # Define the file path to a temp directory for saving RAW data
