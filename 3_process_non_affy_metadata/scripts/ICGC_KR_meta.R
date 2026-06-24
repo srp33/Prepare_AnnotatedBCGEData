@@ -32,7 +32,7 @@ download.file("https://zenodo.org/records/20097812/files/ICGC_KR_sample_metadata
 
 combined_df <- read_tsv(tmp_file_path) %>%
   mutate(Dataset_ID = "ICGC_KR", .before = Sample_ID) %>%
-  mutate(Platform_ID = "Illumina HiSeq", .after = Sample_ID) %>%
+  mutate(Platform_ID = "GPL16791", .after = Sample_ID) %>%
   dplyr::rename(submitted_donor_id = submitted_donor_id.x) %>%
   dplyr::select(-project_code.x,
                 -study_donor_involved_in,

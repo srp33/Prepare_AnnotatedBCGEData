@@ -65,18 +65,32 @@ if (!dir.exists("/Data/IQRray_results")) {
   dir.create("/Data/IQRray_results")
 }
 
+if (!dir.exists("/Data/arrayQualityMetrics_results")) {
+  dir.create("/Data/arrayQualityMetrics_results")
+}
+
+if (!dir.exists("/Data/sva_results")) {
+  dir.create("/Data/sva_results")
+}
+
 #source("scripts/clean_expression_data_colnames.R")
 #source("scripts/match_expr_data_and_metadata.R")
 #source("scripts/add_gene_identifiers.R")
 
-#source("scripts/doppelgangR.R")
-###source("scripts/merge_doppel_results.R")
+#source("scripts/filter_chips.R")
 
-source("functions/compute_IQRray.R")
-source("functions/run_IQRray.R")
-source("functions/bind_IQR_file.R")
+#source("scripts/check_for_duplicates.R")
 
-source("scripts/filter_chips.R")
+#source("functions/compute_IQRray.R")
+#source("functions/run_IQRray.R")
+#source("functions/bind_IQR_file.R")
+
 #source("scripts/IQRray_E_TABM_158.R")
-source("scripts/IQRray_single_chips.R")
+#source("scripts/IQRray_single_chips.R")
 #source("scripts/IQRray_multiple_chips.R")
+
+#source("scripts/apply_arrayQualityMetrics.R")
+
+source("scripts/find_surrogate_variables.R")
+
+###source("scripts/merge_doppel_results.R")

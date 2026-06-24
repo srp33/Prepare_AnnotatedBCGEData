@@ -5,7 +5,7 @@ source_file_name <- "metadata_table.xlsx"
 
 meta_file_path <- paste0(tmp_dir, source_file_name)
 
-platform_id <- "Illumina Short-Read RNA-Sequencing"
+platform_id <- "GPL11154"
 
 # Fill out columns you want to exclude
 excluded_columns <- list(

@@ -246,8 +246,7 @@ for (i in 1:nrow(pairs)) {
   md_out_file_path <- row[8]
   ed_out_file_path <- row[9]
 
-#  processCombo(file_path1, file_path2, dataset_id1, dataset_id2, metadata_file_path1, metadata_file_path2, sg_out_file_path, md_out_file_path, ed_out_file_path)
-#break
+  processCombo(file_path1, file_path2, dataset_id1, dataset_id2, metadata_file_path1, metadata_file_path2, sg_out_file_path, md_out_file_path, ed_out_file_path)
 }
 
 unlink("cache", recursive = TRUE, force = TRUE)
