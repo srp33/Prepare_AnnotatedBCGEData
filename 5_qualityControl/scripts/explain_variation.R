@@ -289,7 +289,7 @@ compute_canonical_correlations <- function(form, meta, original_meta,
 run_variance_partition <- function(expr_mat, metadata,
                                    id_like_frac = 0.9,
                                    max_unique_for_categorical = 10,
-                                   min_samples = 10) {
+                                   min_samples = 6) {
   stopifnot(ncol(expr_mat) == nrow(metadata))
   
   if (ncol(expr_mat) < min_samples)
@@ -318,11 +318,23 @@ run_variance_partition <- function(expr_mat, metadata,
   
   form <- build_formula(cls)
   if (is.null(form))
-    return(excluded_tbl)
+  return(list(
+    variance_explained = excluded_tbl %>%
+      arrange(desc(variance_explained)) %>%
+      mutate(variance_explained = round_number(variance_explained)),
+    cca = tibble(variable_1 = character(), variable_2 = character(),
+                 canonical_cor = character())
+    ))
+#  if (is.null(form))
+#    return(excluded_tbl)
 
   n_cores <- 32
   BPPARAM <- if (n_cores > 1) MulticoreParam(workers = n_cores) else SerialParam()
-  
+ 
+  # This prevents errors for some datasets where metadata variables are on very different scales.
+  fixed_vars <- cls$variable[cls$role == "fixed"]
+  meta[, fixed_vars] <- scale(meta[, fixed_vars, drop = FALSE]) 
+
   print(paste0("Fitting variance partitioning model with ", n_cores, " cores"))
   varPart <- fitExtractVarPartModel(expr_mat, form, meta, BPPARAM = BPPARAM)
   print(paste0("Done fitting variance partitioning model"))
@@ -397,6 +409,7 @@ expr_file_paths <- list.files(datadir, full.names = T)
 #################
 #expr_file_paths <- expr_file_paths[grepl("METABRIC", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE62944_Normal", expr_file_paths)]
+#expr_file_paths <- expr_file_paths[grepl("GSE2990", expr_file_paths)]
 
 #sequencing_platforms <- c("GPL18573", "GPL9052", "GPL11154", "GPL1791")
 
