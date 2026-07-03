@@ -1,7 +1,3 @@
-library(doParallel)
-library(tidyverse)
-library(arrayQualityMetrics)
-
 extractSampleIDs <- function(sampleNames) {
   sampleNames <- gsub("_.+", "", sampleNames)
   sampleNames <- gsub("gsm", "GSM", sampleNames)

@@ -1,23 +1,25 @@
 library(tidyverse)
-library(tools)
-library(doppelgangR)
-library(ggplot2)
-library(affy)
-library(methods)
-library(AnnotationDbi)
-library(Biobase)
-library(oligo)
-library(GEOquery)
-library(doParallel)
+#library(tools)
+#library(doppelgangR)
+#library(affy)
+#library(methods)
+#library(AnnotationDbi)
+#library(Biobase)
+#library(oligo)
+#library(GEOquery)
+#library(doParallel)
+#library(arrayQualityMetrics)
+library(variancePartition)
+library(BiocParallel)
 
-library(pd.hugene.1.0.st.v1)
-library(pd.huex.1.0.st.v2)
-library(u133aaofav2cdf)
-library(hgu95av2cdf)
-library(hgu133acdf)
-library(hgu133a2cdf)
-library(hgu133plus2cdf)
-library(hgu133bcdf)
+#library(pd.hugene.1.0.st.v1)
+#library(pd.huex.1.0.st.v2)
+#library(u133aaofav2cdf)
+#library(hgu95av2cdf)
+#library(hgu133acdf)
+#library(hgu133a2cdf)
+#library(hgu133plus2cdf)
+#library(hgu133bcdf)
 
 # This setting helps with the process very large files.
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 10000)
@@ -69,8 +71,8 @@ if (!dir.exists("/Data/arrayQualityMetrics_results")) {
   dir.create("/Data/arrayQualityMetrics_results")
 }
 
-if (!dir.exists("/Data/sva_results")) {
-  dir.create("/Data/sva_results")
+if (!dir.exists("/Data/variation_results")) {
+  dir.create("/Data/variation_results")
 }
 
 #source("scripts/clean_expression_data_colnames.R")
@@ -89,8 +91,11 @@ if (!dir.exists("/Data/sva_results")) {
 #source("scripts/IQRray_single_chips.R")
 #source("scripts/IQRray_multiple_chips.R")
 
-#source("scripts/apply_arrayQualityMetrics.R")
+# FYI: This script resulted in an error.
+###source("scripts/arrayQualityMetrics_E_TABM_158.R")
+#source("scripts/arrayQualityMetrics_single_chips.R")
+#source("scripts/arrayQualityMetrics_multiple_chips.R")
 
-source("scripts/find_surrogate_variables.R")
+source("scripts/explain_variation.R")
 
 ###source("scripts/merge_doppel_results.R")
