@@ -328,16 +328,21 @@ run_variance_partition <- function(expr_mat, metadata,
 #  if (is.null(form))
 #    return(excluded_tbl)
 
-  n_cores <- 32
-  BPPARAM <- if (n_cores > 1) MulticoreParam(workers = n_cores) else SerialParam()
- 
   # This prevents errors for some datasets where metadata variables are on very different scales.
   fixed_vars <- cls$variable[cls$role == "fixed"]
   meta[, fixed_vars] <- scale(meta[, fixed_vars, drop = FALSE]) 
 
+  n_cores <- 40
+  BPPARAM <- if (n_cores > 1) MulticoreParam(workers = n_cores) else SerialParam()
+#  cl <- makeCluster(n_cores)
+#  registerDoParallel(cl)
+
   print(paste0("Fitting variance partitioning model with ", n_cores, " cores"))
   varPart <- fitExtractVarPartModel(expr_mat, form, meta, BPPARAM = BPPARAM)
   print(paste0("Done fitting variance partitioning model"))
+
+#  stopCluster(cl)
+
   varPart <- as.data.frame(varPart)
   varPart$feature <- rownames(varPart)
   
@@ -370,7 +375,7 @@ run_variance_partition <- function(expr_mat, metadata,
     return()
 }
 
-processDataset <- function(expr_file_path, metadata_file_path, is_microarray, out_variance_file_path, out_cca_file_path) {
+processDataset <- function(dataset_id, expr_file_path, metadata_file_path, is_microarray, out_variance_file_path, out_cca_file_path) {
   if (file.exists(out_cca_file_path)) {
     return(NULL)
   }
@@ -380,6 +385,12 @@ processDataset <- function(expr_file_path, metadata_file_path, is_microarray, ou
   metadata <- getMetadata(metadata_file_path)
   platform_id <- metadata$Platform_ID
   metadata <- metadata$Metadata
+
+  # These variables do not need to be included in this.
+  #   Removing them speeds this analysis up.
+  if (dataset_id %in% c("GSE62944_Normal", "GSE62944_Tumor")) {
+    metadata <- select(metadata, -starts_with("icd_"), -all_of(c("ajcc_staging_edition", "bcr_patient_uuid")))
+  }
 
   if (is.null(metadata)) {
     file.create(c(), out_variance_file_path)
@@ -396,6 +407,10 @@ processDataset <- function(expr_file_path, metadata_file_path, is_microarray, ou
   expr_data <- expr_data[,sample_ids]
   metadata <- metadata[sample_ids, , drop=FALSE]
 
+#expr_data <- expr_data[1:100,]
+#print(dim(expr_data))
+#stop("got here")
+
   print(paste0("Partitioning variance for ", expr_file_path))
   result <- run_variance_partition(expr_data, metadata)
 
@@ -409,6 +424,7 @@ expr_file_paths <- list.files(datadir, full.names = T)
 #################
 #expr_file_paths <- expr_file_paths[grepl("METABRIC", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE62944_Normal", expr_file_paths)]
+expr_file_paths <- expr_file_paths[grepl("GSE62944_Tumor", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE2990", expr_file_paths)]
 
 #sequencing_platforms <- c("GPL18573", "GPL9052", "GPL11154", "GPL1791")
@@ -422,6 +438,6 @@ for (i in 1:length(expr_file_paths)) {
   out_variance_file_path <- str_c(out_dir, "/", dataset_id, "_variance.tsv.gz")
   out_cca_file_path <- str_c(out_dir, "/", dataset_id, "_cca.tsv.gz")
 
-  processDataset(expr_file_path, metadata_file_path, is_microarray, out_variance_file_path, out_cca_file_path)
+  processDataset(dataset_id, expr_file_path, metadata_file_path, is_microarray, out_variance_file_path, out_cca_file_path)
 #break
 }
