@@ -486,9 +486,10 @@ processDataset <- function(dataset_id, expr_file_path, metadata_file_path, is_mi
 expr_file_paths <- list.files(datadir, full.names = T)
 
 #################
+expr_file_paths <- expr_file_paths[grepl("GSE10810", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("METABRIC", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE62944_Normal", expr_file_paths)]
-expr_file_paths <- expr_file_paths[grepl("GSE62944_Tumor", expr_file_paths)]
+#expr_file_paths <- expr_file_paths[grepl("GSE62944_Tumor", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE2990", expr_file_paths)]
 
 #sequencing_platforms <- c("GPL18573", "GPL9052", "GPL11154", "GPL1791")
