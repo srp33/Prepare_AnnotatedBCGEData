@@ -43,16 +43,10 @@ getMetadata <- function(metadata_file_path) {
 #
 # Quantifies how much expression variance each metadata variable
 # explains, using a single joint model so correlated variables
-# share credit rather than double-counting.
-#
-# Output is written one metadata variable at a time so runs can be
-# resumed after interruption. For each variable, two files are created:
-#   <dataset_id>__<variable>__variance.tsv.gz  - variance explained
-#   <dataset_id>__<variable>__cca.tsv.gz       - canonical correlations
-#                                            with all other variables
-# If either file already exists for a variable, that variable is
-# skipped. When any variables remain, the full joint model is fit
-# once and results are written for all outstanding variables.
+# share credit rather than double-counting. The "Unexplained
+# variance" row is the fraction not accounted for by any variable
+# in the model - a combination of biological noise and any
+# unmeasured technical variation such as unrecorded batch effects.
 #
 # Variable roles are assigned automatically:
 #   Continuous variables           -> fixed effect (linear)
@@ -224,57 +218,6 @@ round_number <- function(x) {
   )
 }
 
-sanitize_filename <- function(x) {
-  gsub("[^[:alnum:]._-]", "_", x)
-}
-
-get_output_paths <- function(dataset_id, variable) {
-  var_safe <- sanitize_filename(variable)
-  list(
-    variance = str_c(out_dir, "/", dataset_id, "__", var_safe, "__variance.tsv.gz"),
-    cca      = str_c(out_dir, "/", dataset_id, "__", var_safe, "__cca.tsv.gz")
-  )
-}
-
-get_candidate_variables <- function(metadata, max_unique_for_categorical = 10) {
-  prepped <- prepare_metadata(metadata, max_unique_for_categorical)
-  unique(c(
-    prepped$cont_vars,
-    prepped$cat_vars,
-    prepped$missing_indicator_vars
-  ))
-}
-
-variables_needing_output <- function(dataset_id, variables) {
-  variables[vapply(variables, function(v) {
-    paths <- get_output_paths(dataset_id, v)
-    !file.exists(paths$variance) || !file.exists(paths$cca)
-  }, logical(1))]
-}
-
-write_variable_outputs <- function(dataset_id, variable, variance_tbl, cca_tbl) {
-  paths <- get_output_paths(dataset_id, variable)
-
-  if (!file.exists(paths$variance)) {
-    var_row <- variance_tbl %>% filter(.data$variable == variable)
-    if (nrow(var_row) == 0) {
-      var_row <- tibble(
-        variable             = variable,
-        role                 = "excluded",
-        variance_explained   = round_number(0),
-        status               = "excluded: not modeled"
-      )
-    }
-    write_tsv(var_row, paths$variance)
-  }
-
-  if (!file.exists(paths$cca)) {
-    cca_rows <- cca_tbl %>%
-      filter(.data$variable_1 == variable | .data$variable_2 == variable)
-    write_tsv(cca_rows, paths$cca)
-  }
-}
-
 # Returns a tibble of pairwise canonical correlations between all
 # modeled variables, without duplicates (A vs B appears once only).
 # Variables ending in "_missing" are excluded from CCA since their
@@ -432,57 +375,43 @@ run_variance_partition <- function(expr_mat, metadata,
     return()
 }
 
-processDataset <- function(dataset_id, expr_file_path, metadata_file_path) {
-  metadata <- getMetadata(metadata_file_path)
-  metadata <- metadata$Metadata
-
-  if (dataset_id %in% c("GSE62944_Normal", "GSE62944_Tumor")) {
-    metadata <- select(metadata, -starts_with("icd_"), -all_of(c("ajcc_staging_edition", "bcr_patient_uuid")))
-  }
-
-  if (is.null(metadata)) {
-    return(NULL)
-  }
-
-  candidate_vars <- get_candidate_variables(metadata)
-  if (length(candidate_vars) == 0) {
-    return(NULL)
-  }
-
-  vars_to_compute <- variables_needing_output(dataset_id, candidate_vars)
-  if (length(vars_to_compute) == 0) {
+processDataset <- function(dataset_id, expr_file_path, metadata_file_path, is_microarray, out_variance_file_path, out_cca_file_path) {
+  if (file.exists(out_cca_file_path)) {
     return(NULL)
   }
 
   expr_data <- getExprData(expr_file_path)
 
+  metadata <- getMetadata(metadata_file_path)
+  platform_id <- metadata$Platform_ID
+  metadata <- metadata$Metadata
+
+  # These variables do not need to be included in this.
+  #   Removing them speeds this analysis up.
+  if (dataset_id %in% c("GSE62944_Normal", "GSE62944_Tumor")) {
+    metadata <- select(metadata, -starts_with("icd_"), -all_of(c("ajcc_staging_edition", "bcr_patient_uuid")))
+  }
+
+  if (is.null(metadata)) {
+    file.create(c(), out_variance_file_path)
+    file.create(c(), out_cca_file_path)
+    return(NULL)
+  }
+
   sample_ids <- sort(intersect(colnames(expr_data), rownames(metadata)))
 
   if (length(sample_ids) < 5) {
-    stop(paste0(
-      "There are few, if any, matching samples between the metadata and expression data for ",
-      dataset_id, "."
-    ))
+    stop(paste0("There are few, if any, matching samples between the metadata and expression data for ", file_path1, "."))
   }
 
-  expr_data <- expr_data[, sample_ids]
-  metadata <- metadata[sample_ids, , drop = FALSE]
+  expr_data <- expr_data[,sample_ids]
+  metadata <- metadata[sample_ids, , drop=FALSE]
 
-  print(paste0(
-    "Partitioning variance for ", dataset_id,
-    " (", length(vars_to_compute), " of ", length(candidate_vars),
-    " metadata variables remaining)"
-  ))
+  print(paste0("Partitioning variance for ", expr_file_path))
   result <- run_variance_partition(expr_data, metadata)
 
-  for (variable in candidate_vars) {
-    write_variable_outputs(
-      dataset_id,
-      variable,
-      result$variance_explained,
-      result$cca
-    )
-  }
+  write_tsv(result$variance_explained, out_variance_file_path)
+  write_tsv(result$cca, out_cca_file_path)
 }
 
 # Run dopplegangR for pairwise comparisons of datasets.
@@ -502,7 +431,9 @@ for (i in 1:length(expr_file_paths)) {
 
   expr_file_path <- expr_file_paths[i]
   metadata_file_path <- str_c(metadata_dir, "/", dataset_id, ".tsv")
+  out_variance_file_path <- str_c(out_dir, "/", dataset_id, "_variance.tsv.gz")
+  out_cca_file_path <- str_c(out_dir, "/", dataset_id, "_cca.tsv.gz")
 
-  processDataset(dataset_id, expr_file_path, metadata_file_path)
+  processDataset(dataset_id, expr_file_path, metadata_file_path, is_microarray, out_variance_file_path, out_cca_file_path)
 #break
 }
