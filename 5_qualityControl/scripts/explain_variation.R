@@ -48,6 +48,11 @@ getMetadata <- function(metadata_file_path) {
 # in the model - a combination of biological noise and any
 # unmeasured technical variation such as unrecorded batch effects.
 #
+# Variance partitioning is fit on a random subset of genes (default
+# 1000) after excluding genes with zero variance across samples.
+# Canonical correlations between metadata variables are computed
+# separately on the full metadata and do not use expression data.
+#
 # Variable roles are assigned automatically:
 #   Continuous variables           -> fixed effect (linear)
 #   Categorical variables          -> (1|var) random effect
@@ -289,7 +294,9 @@ compute_canonical_correlations <- function(form, meta, original_meta,
 run_variance_partition <- function(expr_mat, metadata,
                                    id_like_frac = 0.9,
                                    max_unique_for_categorical = 10,
-                                   min_samples = 6) {
+                                   min_samples = 6,
+                                   n_genes = 1000,
+                                   random_seed = 1) {
   stopifnot(ncol(expr_mat) == nrow(metadata))
   
   if (ncol(expr_mat) < min_samples)
@@ -337,8 +344,26 @@ run_variance_partition <- function(expr_mat, metadata,
 #  cl <- makeCluster(n_cores)
 #  registerDoParallel(cl)
 
-  print(paste0("Fitting variance partitioning model with ", n_cores, " cores"))
-  varPart <- fitExtractVarPartModel(expr_mat, form, meta, BPPARAM = BPPARAM)
+  gene_var <- apply(expr_mat, 1, stats::var)
+  varying_genes <- names(gene_var)[!is.na(gene_var) & gene_var > 0]
+  if (length(varying_genes) == 0) {
+    stop("No genes with non-zero variance remain after filtering.")
+  }
+
+  set.seed(random_seed)
+  selected_genes <- if (length(varying_genes) > n_genes) {
+    sample(varying_genes, n_genes)
+  } else {
+    varying_genes
+  }
+  expr_subset <- expr_mat[selected_genes, , drop = FALSE]
+
+  print(paste0(
+    "Fitting variance partitioning model on ",
+    nrow(expr_subset), " of ", nrow(expr_mat), " genes with ",
+    n_cores, " cores"
+  ))
+  varPart <- fitExtractVarPartModel(expr_subset, form, meta, BPPARAM = BPPARAM)
   print(paste0("Done fitting variance partitioning model"))
 
 #  stopCluster(cl)
