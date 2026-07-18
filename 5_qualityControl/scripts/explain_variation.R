@@ -50,8 +50,9 @@ getMetadata <- function(metadata_file_path) {
 #
 # Variance partitioning is fit on a random subset of genes (default
 # 1000) after excluding genes with zero variance across samples.
-# Canonical correlations between metadata variables are computed
-# separately on the full metadata and do not use expression data.
+# Canonical correlations between metadata variables are computed first.
+# Pairs with CCA = 1 are treated as redundant: the alphabetically second
+# variable in each pair is excluded from the variance partitioning model.
 #
 # Variable roles are assigned automatically:
 #   Continuous variables           -> fixed effect (linear)
@@ -284,6 +285,39 @@ compute_canonical_correlations <- function(form, meta, original_meta,
   bind_rows(rows)
 }
 
+# Exclude the alphabetically second variable from each pair with CCA = 1.
+exclude_perfect_cca_variables <- function(classification, cca_tbl) {
+  perfect <- cca_tbl %>%
+    filter(!is.na(canonical_cor), canonical_cor == 1)
+
+  if (nrow(perfect) == 0) {
+    return(classification)
+  }
+
+  drop_info <- perfect %>%
+    rowwise() %>%
+    mutate(
+      kept_var = sort(c(variable_1, variable_2))[1],
+      drop_var = sort(c(variable_1, variable_2))[2]
+    ) %>%
+    ungroup() %>%
+    distinct(drop_var, kept_var)
+
+  for (i in seq_len(nrow(drop_info))) {
+    v <- drop_info$drop_var[i]
+    partner <- drop_info$kept_var[i]
+    idx <- which(classification$variable == v)
+    if (length(idx) == 1 && classification$role[idx] != "excluded") {
+      classification$role[idx] <- "excluded"
+      classification$reason[idx] <- paste0(
+        "perfect canonical correlation (CCA = 1) with ", partner
+      )
+    }
+  }
+
+  classification
+}
+
 # ------------------------------------------------------------
 # Run variance partitioning for one dataset.
 #
@@ -315,25 +349,37 @@ run_variance_partition <- function(expr_mat, metadata,
     id_like_frac = id_like_frac
   )
 
+  form_for_cca <- build_formula(cls)
+  cor_tbl <- if (is.null(form_for_cca)) {
+    tibble(
+      variable_1    = character(),
+      variable_2    = character(),
+      canonical_cor = numeric()
+    )
+  } else {
+    compute_canonical_correlations(form_for_cca, meta, original_meta = metadata) %>%
+      arrange(desc(canonical_cor))
+  }
+
+  cls <- exclude_perfect_cca_variables(cls, cor_tbl)
+  cls <- drop_collinear_fixed(expr_mat, cls, meta)
+
   excluded_tbl <- cls %>%
     filter(role == "excluded") %>%
     transmute(variable, role,
               variance_explained     = 0,
               status = paste0("excluded: ", reason))
-  
-  cls <- drop_collinear_fixed(expr_mat, cls, meta)
-  
+
   form <- build_formula(cls)
-  if (is.null(form))
-  return(list(
-    variance_explained = excluded_tbl %>%
-      arrange(desc(variance_explained)) %>%
-      mutate(variance_explained = round_number(variance_explained)),
-    cca = tibble(variable_1 = character(), variable_2 = character(),
-                 canonical_cor = character())
+  if (is.null(form)) {
+    return(list(
+      variance_explained = excluded_tbl %>%
+        arrange(desc(variance_explained)) %>%
+        mutate(variance_explained = round_number(variance_explained)),
+      cca = cor_tbl %>%
+        mutate(canonical_cor = round_number(canonical_cor))
     ))
-#  if (is.null(form))
-#    return(excluded_tbl)
+  }
 
   # This prevents errors for some datasets where metadata variables are on very different scales.
   fixed_vars <- cls$variable[cls$role == "fixed"]
@@ -384,10 +430,6 @@ run_variance_partition <- function(expr_mat, metadata,
       ),
       status = "ok"
     )
-  
-  cor_tbl <- compute_canonical_correlations(form, meta, original_meta = metadata) %>%
-    arrange(desc(canonical_cor)) %>%
-    mutate(canonical_cor = round_number(canonical_cor))
 
   list(
     variance_explained = bind_rows(fitted_tbl, excluded_tbl) %>%
@@ -395,7 +437,8 @@ run_variance_partition <- function(expr_mat, metadata,
 #      relocate(n_samples, .before = variable) %>%
       arrange(desc(variance_explained)) %>%
       mutate(variance_explained = round_number(variance_explained)),
-    cca = cor_tbl
+    cca = cor_tbl %>%
+      mutate(canonical_cor = round_number(canonical_cor))
   ) %>%
     return()
 }
