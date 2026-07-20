@@ -142,13 +142,19 @@ if (gseID == "GSE10797") {
 }
 
 if (gseID == "GSE10810") {
+  # The histology column doesn't provide useful information when missing values are removed.
   metadata <- metadata %>%
-    dplyr::select(-title, -phenotypes) %>%
+    dplyr::select(-title, -phenotypes, -histology) %>%
     separate("description", c("paired_status", "Patient_ID"), sep = "  ") %>%
     mutate(across(paired_status, ~str_replace(., "Control ", ""))) %>%
     mutate(across(paired_status, ~str_replace(., "Tumor ", ""))) %>%
     mutate(across(paired_status, ~str_replace(., "not paired", "No"))) %>%
-    mutate(across(paired_status, ~str_replace(., "paired", "Yes")))
+    mutate(across(paired_status, ~str_replace(., "paired", "Yes"))) %>%
+    mutate(grade = if_else(grade %in% c("_", "0"), NA, grade)) %>%
+    mutate(ki_67 = if_else(ki_67 == "0", NA, ki_67)) %>%
+    mutate(n = if_else(n == "0", NA, n)) %>%
+    mutate(receptor = if_else(receptor == "0", NA, receptor)) %>%
+    mutate(t = if_else(t == "S", NA, t))
 }
 
 if (gseID == "GSE11121") {
