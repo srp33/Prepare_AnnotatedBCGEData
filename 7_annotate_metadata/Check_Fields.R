@@ -36,20 +36,24 @@ for (metadata_file_path in list.files(path = "../Data/prelim_metadata2", full.na
   }
 }
 
-# Identify which columns are in the metadata but have not been mapped.
-# We adjust the metadata processing steps to ignore metadata fields
-# that don't make sense to use (and leave comments explaining them).
-# We ensure the rest are mapped to ontology term(s).
-
-all_initial_fields = dplyr::select(all_initial, dataset, orig_field)
-all_fields = dplyr::select(all_fields_values, dataset, orig_field)
-
-unmapped = anti_join(all_fields, all_initial_fields) %>%
-  distinct()
-
-if (nrow(unmapped) == 0) {
+if (is.null(all_fields_values)) {
   print("All fields are mapped.")
 } else {
-  write_xlsx(unmapped, "tmp_Metadata_Unmapped.xlsx")
-  print("Please review tmp_Metadata_Unmapped.xlsx for unmapped fields.")
+  # Identify which columns are in the metadata but have not been mapped.
+  # We adjust the metadata processing steps to ignore metadata fields
+  # that don't make sense to use (and leave comments explaining them).
+  # We ensure the rest are mapped to ontology term(s).
+  
+  all_initial_fields = dplyr::select(all_initial, dataset, orig_field)
+  all_fields = dplyr::select(all_fields_values, dataset, orig_field)
+  
+  unmapped = anti_join(all_fields, all_initial_fields) %>%
+    distinct()
+  
+  if (nrow(unmapped) == 0) {
+    print("All fields are mapped.")
+  } else {
+    write_xlsx(unmapped, "tmp_Metadata_Unmapped.xlsx")
+    print("Please review tmp_Metadata_Unmapped.xlsx for unmapped fields.")
+  }
 }
