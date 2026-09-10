@@ -211,6 +211,7 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
       ),
       shared_information_score = round(shared_information_score, 6)
     ) %>%
+    relocate(max_possible_shared_values, .after = n_shared_values) %>%
     arrange(desc(shared_information_score), sample_id1, sample_id2)
 }
 
