@@ -85,11 +85,11 @@ if (!dir.exists("/Data/quality_summaries")) {
 
 ###source("scripts/filter_chips.R")
 
-#source("scripts/check_for_duplicates.R")
+source("scripts/check_for_duplicates.R")
 
-##source("functions/compute_IQRray.R")
-##source("functions/run_IQRray.R")
-##source("functions/bind_IQR_file.R")
+###source("functions/compute_IQRray.R")
+###source("functions/run_IQRray.R")
+###source("functions/bind_IQR_file.R")
 
 ##source("scripts/IQRray_E_TABM_158.R")
 ##source("scripts/IQRray_single_chips.R")
@@ -102,4 +102,4 @@ if (!dir.exists("/Data/quality_summaries")) {
 
 #source("scripts/explain_variation.R")
 
-source("scripts/summarize.R")
+#source("scripts/summarize.R")
