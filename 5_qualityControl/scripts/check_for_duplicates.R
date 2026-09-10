@@ -156,13 +156,6 @@ sis_output_comment <- c(
   "# n_shared_values is the number of distinct matching values (each counted once)."
 )
 
-write_sis_samples <- function(df, path) {
-  con <- gzfile(path, "wt")
-  on.exit(close(con), add = TRUE)
-  writeLines(sis_output_comment, con)
-  write_tsv(df, con)
-}
-
 jaccard_output_comment <- c(
   "# Column-pair Jaccard scores comparing metadata variables across two datasets.",
   "# Score compares relative value frequencies (not just unique labels):",
@@ -172,11 +165,29 @@ jaccard_output_comment <- c(
   "# Only pairs with score > 0.1 are retained."
 )
 
-write_jaccard_variables <- function(df, path) {
+# write_tsv/vroom requires a binary connection, so for commented .tsv.gz
+# output we write via a text gzfile connection + write.table instead.
+write_commented_tsv_gz <- function(df, path, comments) {
   con <- gzfile(path, "wt")
   on.exit(close(con), add = TRUE)
-  writeLines(jaccard_output_comment, con)
-  write_tsv(df, con)
+  writeLines(comments, con)
+  write.table(
+    df,
+    file = con,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE,
+    quote = FALSE,
+    na = ""
+  )
+}
+
+write_sis_samples <- function(df, path) {
+  write_commented_tsv_gz(df, path, sis_output_comment)
+}
+
+write_jaccard_variables <- function(df, path) {
+  write_commented_tsv_gz(df, path, jaccard_output_comment)
 }
 
 empty_sis_tbl <- function() {
