@@ -1,4 +1,3 @@
-
 huExon <- read_tsv(paste0(IQRray_result, "/huExon.tsv")) %>%
   mutate(Platform = "HuEx") %>%
   mutate(Passing = TRUE)

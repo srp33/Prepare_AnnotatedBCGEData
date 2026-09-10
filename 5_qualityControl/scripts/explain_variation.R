@@ -475,8 +475,13 @@ processDataset <- function(dataset_id, expr_file_path, metadata_file_path, is_mi
   expr_data <- expr_data[,sample_ids]
   metadata <- metadata[sample_ids, , drop=FALSE]
 
+  n_genes <- 1000
+#  if (dataset_id == "SCANB.9206") {
+#    n_genes <- 500
+#  }
+
   print(paste0("Partitioning variance for ", expr_file_path))
-  result <- run_variance_partition(expr_data, metadata)
+  result <- run_variance_partition(expr_data, metadata, n_genes = n_genes)
 
   write_tsv(result$variance_explained, out_variance_file_path)
   write_tsv(result$cca, out_cca_file_path)
@@ -486,7 +491,7 @@ processDataset <- function(dataset_id, expr_file_path, metadata_file_path, is_mi
 expr_file_paths <- list.files(datadir, full.names = T)
 
 #################
-expr_file_paths <- expr_file_paths[grepl("GSE10810", expr_file_paths)]
+#expr_file_paths <- expr_file_paths[grepl("GSE10810", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("METABRIC", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE62944_Normal", expr_file_paths)]
 #expr_file_paths <- expr_file_paths[grepl("GSE62944_Tumor", expr_file_paths)]

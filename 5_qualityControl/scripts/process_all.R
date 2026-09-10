@@ -75,27 +75,31 @@ if (!dir.exists("/Data/variation_results")) {
   dir.create("/Data/variation_results")
 }
 
+if (!dir.exists("/Data/quality_summaries")) {
+  dir.create("/Data/quality_summaries")
+}
+
 #source("scripts/clean_expression_data_colnames.R")
 #source("scripts/match_expr_data_and_metadata.R")
 #source("scripts/add_gene_identifiers.R")
 
-#source("scripts/filter_chips.R")
+###source("scripts/filter_chips.R")
 
 #source("scripts/check_for_duplicates.R")
 
-#source("functions/compute_IQRray.R")
-#source("functions/run_IQRray.R")
-#source("functions/bind_IQR_file.R")
+##source("functions/compute_IQRray.R")
+##source("functions/run_IQRray.R")
+##source("functions/bind_IQR_file.R")
 
-#source("scripts/IQRray_E_TABM_158.R")
-#source("scripts/IQRray_single_chips.R")
-#source("scripts/IQRray_multiple_chips.R")
+##source("scripts/IQRray_E_TABM_158.R")
+##source("scripts/IQRray_single_chips.R")
+##source("scripts/IQRray_multiple_chips.R")
 
 # FYI: This script resulted in an error.
 ###source("scripts/arrayQualityMetrics_E_TABM_158.R")
 #source("scripts/arrayQualityMetrics_single_chips.R")
 #source("scripts/arrayQualityMetrics_multiple_chips.R")
 
-source("scripts/explain_variation.R")
+#source("scripts/explain_variation.R")
 
-###source("scripts/merge_doppel_results.R")
+source("scripts/summarize.R")
