@@ -227,12 +227,11 @@ sis_output_comment <- c(
 )
 
 jaccard_output_comment <- c(
-  "# Column-pair Jaccard scores comparing metadata variables across two datasets.",
-  "# Score compares relative value frequencies (not just unique labels):",
-  "#   sum(min(p1,p2)) / sum(max(p1,p2)) over the shared value vocabulary.",
-  "# 1 = identical value distributions; 0 = no shared values.",
-  "# High scores suggest the columns may encode the same kind of variable.",
-  "# All column pairs are included (no score threshold)."
+  "# Metadata column pairs across two datasets (col1 from dataset 1, col2 from dataset 2).",
+  "# jaccard_score measures how similar the value *distributions* are (not just shared labels):",
+  "#   sum(min(p1,p2)) / sum(max(p1,p2)); 1 = same frequencies, 0 = no shared values.",
+  "# High scores suggest the two columns may represent the same kind of variable.",
+  "# This file is for inspection only; SIS sample matching does not filter on these scores."
 )
 
 # write_tsv/vroom requires a binary connection, so for commented .tsv.gz
