@@ -1,3 +1,19 @@
+# ============================================================
+# Shared Information Score (SIS) for cross-dataset sample matching
+# ============================================================
+#
+# The algorithm finds sample pairs that share rare, specific metadata
+# values across two datasets, even when column names differ. For each
+# pair of samples, it searches all combinations of columns between the
+# two datasets and collects values that match. Each unique matching
+# value is only counted once per pair. Each matching value is then
+# weighted by how rare it is across the full combined dataset —
+# common values like "female" contribute almost nothing, while rare
+# values like a specific mutation contribute heavily. These weights
+# are summed into a Shared Information Score for each sample pair.
+# Pairs with the highest scores are the most likely duplicates.
+# ============================================================
+
 datadir <- "/Data/expression_data4"
 metadata_dir <- "/Data/prelim_metadata2"
 
@@ -39,67 +55,169 @@ convertIntStringToFloatString <- function(x) {
   return(x)
 }
 
-calcJaccardScore <- function(metadata1, metadata2, col1_vector, col2_vector) {
-  scores <- c()
-
-  for (i in 1:length(col1_vector)) {
-    col1 <- col1_vector[i]
-    col2 <- col2_vector[i]
-
-    x <- pull(metadata1, col1)
-    y <- pull(metadata2, col2)
-
-    x <- sort(unique(na.omit(as.character(x))))
-    y <- sort(unique(na.omit(as.character(y))))
-
-    x <- convertIntStringToFloatString(x)
-    y <- convertIntStringToFloatString(y)
-
-    scores <- c(scores, length(intersect(x, y)) / length(union(x, y)))
-  }
-
-  return(scores)
+# Normalize a metadata data frame to a character matrix so that
+# "45" and "45.0" are treated as the same value.
+normalize_metadata_values <- function(metadata) {
+  mat <- as.matrix(metadata)
+  storage.mode(mat) <- "character"
+  mat[is.na(metadata)] <- NA_character_
+  mat[] <- convertIntStringToFloatString(mat)
+  mat
 }
 
-calcSamplePairScores <- function(dataset_id1, dataset_id2, metadata1, metadata2, metadata_combos) {
-  count_matrix <- matrix(0, nrow = nrow(metadata1), ncol = nrow(metadata2))
-  rownames(count_matrix) <- rownames(metadata1)
-  colnames(count_matrix) <- rownames(metadata2)
+# Build a named list: sample_id -> unique non-missing metadata values.
+sample_value_sets <- function(value_mat) {
+  setNames(
+    lapply(seq_len(nrow(value_mat)), function(i) {
+      unique(na.omit(value_mat[i, ]))
+    }),
+    rownames(value_mat)
+  )
+}
 
-  for (i in 1:nrow(metadata_combos)) {
-    print(c(dataset_id1, dataset_id2))
-    print(metadata_combos[i,])
-    col1 <- as.vector(metadata_combos[i,1])
-    col2 <- as.vector(metadata_combos[i,2])
+# Count how many samples (across both datasets) contain each value in
+# at least one column. Rarity weight is -log2(proportion of samples),
+# so ubiquitous values get weight ~0 and rare values get large weight.
+value_rarity_weights <- function(value_sets1, value_sets2) {
+  n_total <- length(value_sets1) + length(value_sets2)
+  value_counts <- table(unlist(c(value_sets1, value_sets2), use.names = FALSE))
+  # IDF-style weight; values present in every sample contribute 0.
+  setNames(-log2(as.numeric(value_counts) / n_total), names(value_counts))
+}
 
-    for (j in 1:nrow(metadata1)) {
-      sample_id1 <- rownames(metadata1)[j]
+# ------------------------------------------------------------
+# Shared Information Score for all sample pairs between two datasets.
+#
+# Uses an inverted index over values: for each unique value, add its
+# rarity weight to every sample pair that both carry that value. This
+# is equivalent to set-intersection scoring but avoids an O(n1*n2)
+# pass over empty pairs when most values are sparse.
+# ------------------------------------------------------------
+calcSharedInformationScores <- function(metadata1, metadata2) {
+  value_mat1 <- normalize_metadata_values(metadata1)
+  value_mat2 <- normalize_metadata_values(metadata2)
 
-      for (k in 1:nrow(metadata2)) {
-        sample_id2 <- rownames(metadata2)[k]
+  value_sets1 <- sample_value_sets(value_mat1)
+  value_sets2 <- sample_value_sets(value_mat2)
+  weights <- value_rarity_weights(value_sets1, value_sets2)
 
-        value1 <- metadata1[j,col1]
-        value2 <- metadata2[k,col2]
-
-        if (is.null(value1) || is.null(value2) || is.na(value1) || is.na(value2)) {
-          next
-        }
-
-        if (value1 == value2) {
-          count_matrix[sample_id1, sample_id2] <- count_matrix[sample_id1, sample_id2] + 1
-        }
-      }
+  # Invert: value -> sample IDs that contain it in each dataset.
+  samples_by_value1 <- list()
+  for (sid in names(value_sets1)) {
+    for (v in value_sets1[[sid]]) {
+      samples_by_value1[[v]] <- c(samples_by_value1[[v]], sid)
+    }
+  }
+  samples_by_value2 <- list()
+  for (sid in names(value_sets2)) {
+    for (v in value_sets2[[sid]]) {
+      samples_by_value2[[v]] <- c(samples_by_value2[[v]], sid)
     }
   }
 
-  df <- as.data.frame(as.table(count_matrix))
-  colnames(df) <- c("sample_id1", "sample_id2", "identical_count")
-  total_variable_count <- nrow(metadata_combos)
-  df$total_variable_count <- total_variable_count
+  # Only values present in both datasets can contribute to any pair.
+  shared_values <- intersect(names(samples_by_value1), names(samples_by_value2))
 
-  filter(df, identical_count > 0) %>%
-    arrange(desc(identical_count), sample_id1, sample_id2) %>%
-    return()
+  score_matrix <- matrix(0, nrow = nrow(metadata1), ncol = nrow(metadata2))
+  rownames(score_matrix) <- rownames(metadata1)
+  colnames(score_matrix) <- rownames(metadata2)
+
+  match_count_matrix <- matrix(0L, nrow = nrow(metadata1), ncol = nrow(metadata2))
+  rownames(match_count_matrix) <- rownames(metadata1)
+  colnames(match_count_matrix) <- rownames(metadata2)
+
+  for (v in shared_values) {
+    w <- weights[[v]]
+    if (is.null(w) || w <= 0) next
+
+    s1 <- samples_by_value1[[v]]
+    s2 <- samples_by_value2[[v]]
+    # Outer product of indicator vectors: add weight to every (s1, s2) pair.
+    score_matrix[s1, s2] <- score_matrix[s1, s2] + w
+    match_count_matrix[s1, s2] <- match_count_matrix[s1, s2] + 1L
+  }
+
+  score_df <- as.data.frame(as.table(score_matrix))
+  colnames(score_df) <- c("sample_id1", "sample_id2", "shared_information_score")
+  match_df <- as.data.frame(as.table(match_count_matrix))
+  colnames(match_df) <- c("sample_id1", "sample_id2", "n_shared_values")
+
+  inner_join(score_df, match_df, by = c("sample_id1", "sample_id2")) %>%
+    filter(shared_information_score > 0) %>%
+    arrange(desc(shared_information_score), sample_id1, sample_id2) %>%
+    mutate(shared_information_score = round(shared_information_score, 6))
+}
+
+sis_output_comment <- c(
+  "# Shared Information Score (SIS) for candidate duplicate samples.",
+  "# Higher scores = stronger evidence the two samples are the same individual.",
+  "# Score = sum of rarity weights for unique metadata values shared by the pair.",
+  "# Rare shared values (e.g. a specific mutation) weigh more than common ones (e.g. female).",
+  "# n_shared_values is the number of distinct matching values (each counted once)."
+)
+
+write_sis_samples <- function(df, path) {
+  con <- gzfile(path, "wt")
+  on.exit(close(con), add = TRUE)
+  writeLines(sis_output_comment, con)
+  write_tsv(df, con)
+}
+
+jaccard_output_comment <- c(
+  "# Column-pair Jaccard scores comparing metadata variables across two datasets.",
+  "# Score compares relative value frequencies (not just unique labels):",
+  "#   sum(min(p1,p2)) / sum(max(p1,p2)) over the shared value vocabulary.",
+  "# 1 = identical value distributions; 0 = no shared values.",
+  "# High scores suggest the columns may encode the same kind of variable.",
+  "# Only pairs with score > 0.1 are retained."
+)
+
+write_jaccard_variables <- function(df, path) {
+  con <- gzfile(path, "wt")
+  on.exit(close(con), add = TRUE)
+  writeLines(jaccard_output_comment, con)
+  write_tsv(df, con)
+}
+
+empty_sis_tbl <- function() {
+  tibble(
+    sample_id1 = character(),
+    sample_id2 = character(),
+    shared_information_score = numeric(),
+    n_shared_values = integer()
+  )
+}
+
+# Column-pair similarity based on value *distributions*, not just the
+# set of unique labels. Unique-set Jaccard scores 1 whenever two columns
+# share the same labels (e.g. both {1,2,3} or both {yes,no}), even if one
+# is nearly all "1" and the other is uniform — which incorrectly marks
+# unrelated columns as matches. Here we compare relative frequencies
+# (Ruzicka / probability Jaccard): sum(min(p1,p2)) / sum(max(p1,p2)).
+calcJaccardScore <- function(metadata1, metadata2, col1_vector, col2_vector) {
+  vapply(seq_along(col1_vector), function(i) {
+    x <- convertIntStringToFloatString(as.character(metadata1[[col1_vector[i]]]))
+    y <- convertIntStringToFloatString(as.character(metadata2[[col2_vector[i]]]))
+    x <- x[!is.na(x)]
+    y <- y[!is.na(y)]
+
+    if (length(x) == 0 || length(y) == 0) {
+      return(NA_real_)
+    }
+
+    px <- table(x)
+    py <- table(y)
+    px <- px / sum(px)
+    py <- py / sum(py)
+
+    all_vals <- union(names(px), names(py))
+    p1 <- setNames(rep(0, length(all_vals)), all_vals)
+    p2 <- p1
+    p1[names(px)] <- as.numeric(px)
+    p2[names(py)] <- as.numeric(py)
+
+    sum(pmin(p1, p2)) / sum(pmax(p1, p2))
+  }, numeric(1))
 }
 
 processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metadata_file_path1, metadata_file_path2, sg_out_file_path, md_out_file_path, ed_out_file_path) {
@@ -158,32 +276,33 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
   }
 
   if (!file.exists(md_out_file_path)) {
-    candidate_metadata_combos <- expand.grid(
-      col1 = colnames(metadata1),
-      col2 = colnames(metadata2)
-    )
-
-    if (nrow(candidate_metadata_combos) == 0) {
-      write_tsv(data.frame(
-        sample_id1 = character(),
-        sample_id2 = character(),
-        identical_count = character(),
-        total_variable_count = character()
-      ), md_out_file_path)
+    if (is.null(metadata1) || is.null(metadata2) ||
+        ncol(metadata1) == 0 || ncol(metadata2) == 0) {
+      write_sis_samples(empty_sis_tbl(), md_out_file_path)
     } else {
-      candidate_metadata_combos = mutate(candidate_metadata_combos, jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)) %>%
-        filter(jaccard_score > 0.1) # This threshold is arbitrary but fairly low by design.
+      print(paste0("Calculating Shared Information Scores for ", dataset_id1, " and ", dataset_id2))
+      write_sis_samples(
+        calcSharedInformationScores(metadata1, metadata2),
+        md_out_file_path
+      )
 
-      if (nrow(candidate_metadata_combos) == 0) {
-        write_tsv(data.frame(
-        sample_id1 = character(),
-        sample_id2 = character(),
-        identical_count = character(),
-        total_variable_count = character()
-      ), md_out_file_path)
-      } else {
-        write_tsv(calcSamplePairScores(dataset_id1, dataset_id2, metadata1, metadata2, candidate_metadata_combos), md_out_file_path)
-        write_tsv(candidate_metadata_combos, sub("____samples.tsv.gz", "____variables.tsv.gz", md_out_file_path))
+      # Variable-pair Jaccard scores are written separately for inspection;
+      # SIS itself compares values across all column combinations.
+      candidate_metadata_combos <- expand.grid(
+        col1 = colnames(metadata1),
+        col2 = colnames(metadata2),
+        stringsAsFactors = FALSE
+      )
+      if (nrow(candidate_metadata_combos) > 0) {
+        candidate_metadata_combos <- mutate(
+          candidate_metadata_combos,
+          jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)
+        ) %>%
+          filter(jaccard_score > 0.1) # Arbitrary but fairly low by design.
+        write_jaccard_variables(
+          candidate_metadata_combos,
+          sub("____samples.tsv.gz", "____variables.tsv.gz", md_out_file_path)
+        )
       }
     }
   }
