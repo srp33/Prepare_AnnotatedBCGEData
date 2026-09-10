@@ -127,13 +127,16 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
   colnames(match_count_matrix) <- rownames(metadata2)
 
   for (v in shared_values) {
-    w <- weights[[v]]
-    if (is.null(w) || w <= 0) next
+    w <- unname(weights[v])
+    if (is.na(w)) next
 
     s1 <- samples_by_value1[[v]]
     s2 <- samples_by_value2[[v]]
-    # Outer product of indicator vectors: add weight to every (s1, s2) pair.
-    score_matrix[s1, s2] <- score_matrix[s1, s2] + w
+    # Ubiquitous values have weight 0 and do not change the score,
+    # but still count toward n_shared_values.
+    if (w > 0) {
+      score_matrix[s1, s2] <- score_matrix[s1, s2] + w
+    }
     match_count_matrix[s1, s2] <- match_count_matrix[s1, s2] + 1L
   }
 
@@ -143,7 +146,6 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
   colnames(match_df) <- c("sample_id1", "sample_id2", "n_shared_values")
 
   inner_join(score_df, match_df, by = c("sample_id1", "sample_id2")) %>%
-    filter(shared_information_score > 0) %>%
     arrange(desc(shared_information_score), sample_id1, sample_id2) %>%
     mutate(shared_information_score = round(shared_information_score, 6))
 }
@@ -153,7 +155,8 @@ sis_output_comment <- c(
   "# Higher scores = stronger evidence the two samples are the same individual.",
   "# Score = sum of rarity weights for unique metadata values shared by the pair.",
   "# Rare shared values (e.g. a specific mutation) weigh more than common ones (e.g. female).",
-  "# n_shared_values is the number of distinct matching values (each counted once)."
+  "# n_shared_values is the number of distinct matching values (each counted once).",
+  "# All sample pairs are included (score may be 0 when nothing informative is shared)."
 )
 
 jaccard_output_comment <- c(
@@ -162,7 +165,7 @@ jaccard_output_comment <- c(
   "#   sum(min(p1,p2)) / sum(max(p1,p2)) over the shared value vocabulary.",
   "# 1 = identical value distributions; 0 = no shared values.",
   "# High scores suggest the columns may encode the same kind of variable.",
-  "# Only pairs with score > 0.1 are retained."
+  "# All column pairs are included (no score threshold)."
 )
 
 # write_tsv/vroom requires a binary connection, so for commented .tsv.gz
@@ -309,7 +312,7 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
           candidate_metadata_combos,
           jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)
         ) %>%
-          filter(jaccard_score > 0.1) # Arbitrary but fairly low by design.
+          arrange(desc(jaccard_score), col1, col2)
         write_jaccard_variables(
           candidate_metadata_combos,
           sub("____samples.tsv.gz", "____variables.tsv.gz", md_out_file_path)
