@@ -197,11 +197,21 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
     stringsAsFactors = FALSE
   )
 
+  # Per-sample unique value counts; pair max overlap is min of the two.
+  n_values1 <- setNames(lengths(value_sets1), names(value_sets1))
+  n_values2 <- setNames(lengths(value_sets2), names(value_sets2))
+
   score_df %>%
     inner_join(match_df, by = c("sample_id1", "sample_id2")) %>%
     inner_join(detail_df, by = c("sample_id1", "sample_id2")) %>%
-    arrange(desc(shared_information_score), sample_id1, sample_id2) %>%
-    mutate(shared_information_score = round(shared_information_score, 6))
+    mutate(
+      max_possible_shared_values = pmin(
+        n_values1[as.character(sample_id1)],
+        n_values2[as.character(sample_id2)]
+      ),
+      shared_information_score = round(shared_information_score, 6)
+    ) %>%
+    arrange(desc(shared_information_score), sample_id1, sample_id2)
 }
 
 sis_output_comment <- c(
@@ -210,6 +220,7 @@ sis_output_comment <- c(
   "# Score = sum of rarity weights for unique metadata values shared by the pair.",
   "# Rare shared values (e.g. a specific mutation) weigh more than common ones (e.g. female).",
   "# n_shared_values is the number of distinct matching values (each counted once).",
+  "# max_possible_shared_values = min(# unique values in sample1, # unique values in sample2).",
   "# shared_column_values lists matches as: col1[,col1b]=value|col2[,col2b] (semicolon-separated).",
   "# All sample pairs are included (score may be 0 when nothing informative is shared)."
 )
@@ -254,6 +265,7 @@ empty_sis_tbl <- function() {
     sample_id2 = character(),
     shared_information_score = numeric(),
     n_shared_values = integer(),
+    max_possible_shared_values = integer(),
     shared_column_values = character()
   )
 }
