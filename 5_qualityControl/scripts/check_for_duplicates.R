@@ -4,14 +4,16 @@
 #
 # The algorithm finds sample pairs that share rare, specific metadata
 # values across two datasets, even when column names differ. For each
-# pair of samples, it searches all combinations of columns between the
-# two datasets and collects values that match. Each unique matching
-# value is only counted once per pair. Each matching value is then
-# weighted by how rare it is across the full combined dataset —
-# common values like "female" contribute almost nothing, while rare
-# values like a specific mutation contribute heavily. These weights
-# are summed into a Shared Information Score for each sample pair.
-# Pairs with the highest scores are the most likely duplicates.
+# pair of samples, it finds values that appear in both samples (in any
+# columns). A value that matches in multiple columns counts once per
+# column on the smaller side: min(# columns with that value in sample 1,
+# # columns with that value in sample 2). So ER=Positive and PR=Positive
+# are two matches, not one. Each match is weighted by how rare that
+# value is across the full combined dataset — common values like
+# "female" contribute almost nothing, while rare values like a specific
+# mutation contribute heavily. These weights are summed into a Shared
+# Information Score for each sample pair. Pairs with the highest scores
+# are the most likely duplicates.
 # ============================================================
 
 datadir <- "/Data/expression_data4"
@@ -150,7 +152,7 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
   rownames(score_matrix) <- rownames(metadata1)
   colnames(score_matrix) <- rownames(metadata2)
 
-  match_count_matrix <- matrix(0L, nrow = nrow(metadata1), ncol = nrow(metadata2))
+  match_count_matrix <- matrix(0, nrow = nrow(metadata1), ncol = nrow(metadata2))
   rownames(match_count_matrix) <- rownames(metadata1)
   colnames(match_count_matrix) <- rownames(metadata2)
 
@@ -165,12 +167,18 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
 
     s1 <- samples_by_value1[[v]]
     s2 <- samples_by_value2[[v]]
+    # Count column-level matches, not unique strings. ER=Positive and
+    # PR=Positive are two matches when both sides have that value in
+    # two columns: min(n_cols1, n_cols2).
+    n_cols1 <- vapply(s1, function(a) length(value_cols1[[a]][[v]]), integer(1))
+    n_cols2 <- vapply(s2, function(b) length(value_cols2[[b]][[v]]), integer(1))
+    n_match <- outer(n_cols1, n_cols2, pmin)
     # Ubiquitous values have weight 0 and do not change the score,
     # but still count toward n_shared_values and appear in the detail column.
     if (w > 0) {
-      score_matrix[s1, s2] <- score_matrix[s1, s2] + w
+      score_matrix[s1, s2] <- score_matrix[s1, s2] + w * n_match
     }
-    match_count_matrix[s1, s2] <- match_count_matrix[s1, s2] + 1L
+    match_count_matrix[s1, s2] <- match_count_matrix[s1, s2] + n_match
 
     for (a in s1) {
       cols_a <- value_cols1[[a]][[v]]
@@ -197,17 +205,18 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
     stringsAsFactors = FALSE
   )
 
-  # Per-sample unique value counts; pair max overlap is min of the two.
-  n_values1 <- setNames(lengths(value_sets1), names(value_sets1))
-  n_values2 <- setNames(lengths(value_sets2), names(value_sets2))
+  # Ceiling is the smaller number of non-missing fields, since each
+  # match consumes one column on each side.
+  n_fields1 <- setNames(rowSums(!is.na(value_mat1)), rownames(value_mat1))
+  n_fields2 <- setNames(rowSums(!is.na(value_mat2)), rownames(value_mat2))
 
   score_df %>%
     inner_join(match_df, by = c("sample_id1", "sample_id2")) %>%
     inner_join(detail_df, by = c("sample_id1", "sample_id2")) %>%
     mutate(
       max_possible_shared_values = pmin(
-        n_values1[as.character(sample_id1)],
-        n_values2[as.character(sample_id2)]
+        n_fields1[as.character(sample_id1)],
+        n_fields2[as.character(sample_id2)]
       ),
       shared_information_score = round(shared_information_score, 6)
     ) %>%
@@ -218,10 +227,11 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
 sis_output_comment <- c(
   "# Shared Information Score (SIS) for candidate duplicate samples.",
   "# Higher scores = stronger evidence the two samples are the same individual.",
-  "# Score = sum of rarity weights for unique metadata values shared by the pair.",
+  "# Score = sum of (rarity weight * column-level matches) for shared values.",
+  "# A value in k columns on each side counts k times (e.g. ER+ and PR+ are two matches).",
   "# Rare shared values (e.g. a specific mutation) weigh more than common ones (e.g. female).",
-  "# n_shared_values is the number of distinct matching values (each counted once).",
-  "# max_possible_shared_values = min(# unique values in sample1, # unique values in sample2).",
+  "# n_shared_values is the number of column-level matches (sum of min(#cols1, #cols2) per value).",
+  "# max_possible_shared_values = min(# non-missing fields in sample1, # in sample2).",
   "# shared_column_values lists matches as: col1[,col1b]=value|col2[,col2b] (semicolon-separated).",
   "# All sample pairs are included (score may be 0 when nothing informative is shared)."
 )
