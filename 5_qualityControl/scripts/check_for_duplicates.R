@@ -93,10 +93,12 @@ calcSamplePairScores <- function(dataset_id1, dataset_id2, metadata1, metadata2,
   }
 
   df <- as.data.frame(as.table(count_matrix))
-  colnames(df) <- c("sample_id1", "sample_id2", "count")
+  colnames(df) <- c("sample_id1", "sample_id2", "identical_count")
+  total_variable_count <- nrow(metadata_combos)
+  df$total_variable_count <- total_variable_count
 
-  filter(df, count > 0) %>%
-    arrange(desc(count), sample_id1, sample_id2) %>%
+  filter(df, identical_count > 0) %>%
+    arrange(desc(identical_count), sample_id1, sample_id2) %>%
     return()
 }
 
@@ -162,14 +164,23 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     )
 
     if (nrow(candidate_metadata_combos) == 0) {
-      write_tsv(data.frame(sample_id1 = character(), sample_id2 = character(), count = character()), md_out_file_path)
+      write_tsv(data.frame(
+        sample_id1 = character(),
+        sample_id2 = character(),
+        identical_count = character(),
+        total_variable_count = character()
+      ), md_out_file_path)
     } else {
       candidate_metadata_combos = mutate(candidate_metadata_combos, jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)) %>%
-        filter(jaccard_score > 0.1) %>% # This threshold is arbitrary but fairly low by design.
-        dplyr::select(-jaccard_score)
+        filter(jaccard_score > 0.1) # This threshold is arbitrary but fairly low by design.
 
       if (nrow(candidate_metadata_combos) == 0) {
-        write_tsv(data.frame(sample_id1 = character(), sample_id2 = character(), count = character()), md_out_file_path)
+        write_tsv(data.frame(
+        sample_id1 = character(),
+        sample_id2 = character(),
+        identical_count = character(),
+        total_variable_count = character()
+      ), md_out_file_path)
       } else {
         write_tsv(calcSamplePairScores(dataset_id1, dataset_id2, metadata1, metadata2, candidate_metadata_combos), md_out_file_path)
         write_tsv(candidate_metadata_combos, sub("____samples.tsv.gz", "____variables.tsv.gz", md_out_file_path))
