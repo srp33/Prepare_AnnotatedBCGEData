@@ -75,6 +75,22 @@ sample_value_sets <- function(value_mat) {
   )
 }
 
+# For each sample, map each value to the column name(s) where it appears.
+sample_value_to_columns <- function(value_mat) {
+  cols <- colnames(value_mat)
+  setNames(
+    lapply(seq_len(nrow(value_mat)), function(i) {
+      row <- value_mat[i, ]
+      ok <- !is.na(row)
+      if (!any(ok)) {
+        return(list())
+      }
+      split(unname(cols[ok]), row[ok])
+    }),
+    rownames(value_mat)
+  )
+}
+
 # Count how many samples (across both datasets) contain each value in
 # at least one column. Rarity weight is -log2(proportion of samples),
 # so ubiquitous values get weight ~0 and rare values get large weight.
@@ -83,6 +99,16 @@ value_rarity_weights <- function(value_sets1, value_sets2) {
   value_counts <- table(unlist(c(value_sets1, value_sets2), use.names = FALSE))
   # IDF-style weight; values present in every sample contribute 0.
   setNames(-log2(as.numeric(value_counts) / n_total), names(value_counts))
+}
+
+# Format one shared value for the detail column:
+#   col1a,col1b=value|col2a,col2b
+format_shared_match <- function(cols1, cols2, value) {
+  paste0(
+    paste(cols1, collapse = ","),
+    "=", value, "|",
+    paste(cols2, collapse = ",")
+  )
 }
 
 # ------------------------------------------------------------
@@ -99,6 +125,8 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
 
   value_sets1 <- sample_value_sets(value_mat1)
   value_sets2 <- sample_value_sets(value_mat2)
+  value_cols1 <- sample_value_to_columns(value_mat1)
+  value_cols2 <- sample_value_to_columns(value_mat2)
   weights <- value_rarity_weights(value_sets1, value_sets2)
 
   # Invert: value -> sample IDs that contain it in each dataset.
@@ -126,6 +154,11 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
   rownames(match_count_matrix) <- rownames(metadata1)
   colnames(match_count_matrix) <- rownames(metadata2)
 
+  # Character matrix of shared column/value match descriptions.
+  detail_matrix <- matrix("", nrow = nrow(metadata1), ncol = nrow(metadata2))
+  rownames(detail_matrix) <- rownames(metadata1)
+  colnames(detail_matrix) <- rownames(metadata2)
+
   for (v in shared_values) {
     w <- unname(weights[v])
     if (is.na(w)) next
@@ -133,19 +166,40 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
     s1 <- samples_by_value1[[v]]
     s2 <- samples_by_value2[[v]]
     # Ubiquitous values have weight 0 and do not change the score,
-    # but still count toward n_shared_values.
+    # but still count toward n_shared_values and appear in the detail column.
     if (w > 0) {
       score_matrix[s1, s2] <- score_matrix[s1, s2] + w
     }
     match_count_matrix[s1, s2] <- match_count_matrix[s1, s2] + 1L
+
+    for (a in s1) {
+      cols_a <- value_cols1[[a]][[v]]
+      for (b in s2) {
+        piece <- format_shared_match(cols_a, value_cols2[[b]][[v]], v)
+        if (detail_matrix[a, b] == "") {
+          detail_matrix[a, b] <- piece
+        } else {
+          detail_matrix[a, b] <- paste(detail_matrix[a, b], piece, sep = ";")
+        }
+      }
+    }
   }
 
   score_df <- as.data.frame(as.table(score_matrix))
   colnames(score_df) <- c("sample_id1", "sample_id2", "shared_information_score")
   match_df <- as.data.frame(as.table(match_count_matrix))
   colnames(match_df) <- c("sample_id1", "sample_id2", "n_shared_values")
+  # as.table() is numeric-only; expand the character detail matrix manually.
+  detail_df <- data.frame(
+    sample_id1 = rep(rownames(detail_matrix), times = ncol(detail_matrix)),
+    sample_id2 = rep(colnames(detail_matrix), each = nrow(detail_matrix)),
+    shared_column_values = as.vector(detail_matrix),
+    stringsAsFactors = FALSE
+  )
 
-  inner_join(score_df, match_df, by = c("sample_id1", "sample_id2")) %>%
+  score_df %>%
+    inner_join(match_df, by = c("sample_id1", "sample_id2")) %>%
+    inner_join(detail_df, by = c("sample_id1", "sample_id2")) %>%
     arrange(desc(shared_information_score), sample_id1, sample_id2) %>%
     mutate(shared_information_score = round(shared_information_score, 6))
 }
@@ -156,6 +210,7 @@ sis_output_comment <- c(
   "# Score = sum of rarity weights for unique metadata values shared by the pair.",
   "# Rare shared values (e.g. a specific mutation) weigh more than common ones (e.g. female).",
   "# n_shared_values is the number of distinct matching values (each counted once).",
+  "# shared_column_values lists matches as: col1[,col1b]=value|col2[,col2b] (semicolon-separated).",
   "# All sample pairs are included (score may be 0 when nothing informative is shared)."
 )
 
@@ -198,7 +253,8 @@ empty_sis_tbl <- function() {
     sample_id1 = character(),
     sample_id2 = character(),
     shared_information_score = numeric(),
-    n_shared_values = integer()
+    n_shared_values = integer(),
+    shared_column_values = character()
   )
 }
 
