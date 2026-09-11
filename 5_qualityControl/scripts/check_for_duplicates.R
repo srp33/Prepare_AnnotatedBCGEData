@@ -9,11 +9,13 @@
 # column on the smaller side: min(# columns with that value in sample 1,
 # # columns with that value in sample 2). So ER=Positive and PR=Positive
 # are two matches, not one. Each match is weighted by how rare that
-# value is across the full combined dataset — common values like
-# "female" contribute almost nothing, while rare values like a specific
-# mutation contribute heavily. These weights are summed into a Shared
-# Information Score for each sample pair. Pairs with the highest scores
-# are the most likely duplicates.
+# value is. Matching on a less common value raises the score, because
+# two unrelated samples are less likely to share it by chance.
+# Example: two samples that both have a rare mutation score higher
+# than two that only both say "female", even if each pair matches on
+# the same number of fields. A value present in every sample adds
+# nothing. These weights are summed into a Shared Information Score.
+# Higher scores mean the pair is a more likely duplicate.
 # ============================================================
 
 datadir <- "/Data/expression_data4"
@@ -228,8 +230,10 @@ sis_output_comment <- c(
   "# Shared Information Score (SIS) for candidate duplicate samples.",
   "# Higher scores = stronger evidence the two samples are the same individual.",
   "# Score = sum of (rarity weight * column-level matches) for shared values.",
+  "# A less common shared value raises the score, because unrelated samples",
+  "# are less likely to match on it by chance. Example: sharing a rare mutation",
+  "# scores higher than both saying 'female', even with the same number of matches.",
   "# A value in k columns on each side counts k times (e.g. ER+ and PR+ are two matches).",
-  "# Rare shared values (e.g. a specific mutation) weigh more than common ones (e.g. female).",
   "# n_shared_values is the number of column-level matches (sum of min(#cols1, #cols2) per value).",
   "# max_possible_shared_values = min(# non-missing fields in sample1, # in sample2).",
   "# shared_column_values lists matches as: col1[,col1b]=value|col2[,col2b] (semicolon-separated).",
