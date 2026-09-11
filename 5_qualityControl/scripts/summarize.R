@@ -66,4 +66,6 @@ for (file_path in doppelgangR_metadata_files) {
 print(doppelgangR_metadata, width = Inf)
 print(dim(doppelgangR_metadata))
 
+#I also want to modify the code so it doesn't include the same pair of samples twice. For example, it is possible that 
+
 #doppelgangR_expr_data <- read_tsv("/Data/doppelgangR_expr_data/")
