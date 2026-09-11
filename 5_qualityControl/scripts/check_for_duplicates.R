@@ -452,9 +452,9 @@ pairs <- mutate(pairs, dataset_id1 = basename(file_path1)) %>%
   mutate(metadata_file_path2 = str_c(metadata_dir, "/", dataset_id2, ".tsv")) %>%
   mutate(sg_out_file_path = str_c("/Data/doppelgangR_smokinggun/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
   mutate(md_out_file_path = str_c("/Data/doppelgangR_metadata/", dataset_id1, "_", dataset_id2, "____samples.tsv.gz")) %>%
-  mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
+  mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) #%>%
 #filter(dataset_id1 == "GSE12276" & dataset_id2 == "GSE12763")
- filter(dataset_id1 == "ABiM.100" & dataset_id2 == "ABiM.405")
+# filter(dataset_id1 == "ABiM.100" & dataset_id2 == "ABiM.405")
 #filter(dataset_id1 == "SCANB.9206" | dataset_id2 == "SCANB.9206")
 #filter(dataset_id1 == "GSE96058_HiSeq" & dataset_id2 == "SCANB.9206")
  # slice_sample(prop = 1)
