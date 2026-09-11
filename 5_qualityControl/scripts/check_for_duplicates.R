@@ -16,6 +16,8 @@
 # the same number of fields. A value present in every sample adds
 # nothing. These weights are summed into a Shared Information Score.
 # Higher scores mean the pair is a more likely duplicate.
+# Only pairs with at least 3 shared values, an overlap fraction of at
+# least 0.5, and different sample IDs are written to the output file.
 # ============================================================
 
 datadir <- "/Data/expression_data4"
@@ -223,6 +225,13 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
       shared_information_score = round(shared_information_score, 6)
     ) %>%
     relocate(max_possible_shared_values, .after = n_shared_values) %>%
+    # Keep only pairs with enough shared information to be interesting.
+    filter(
+      n_shared_values >= 3,
+      max_possible_shared_values > 0,
+      (n_shared_values / max_possible_shared_values) >= 0.5,
+      as.character(sample_id1) != as.character(sample_id2)
+    ) %>%
     arrange(desc(shared_information_score), sample_id1, sample_id2)
 }
 
@@ -237,7 +246,7 @@ sis_output_comment <- c(
   "# n_shared_values is the number of column-level matches (sum of min(#cols1, #cols2) per value).",
   "# max_possible_shared_values = min(# non-missing fields in sample1, # in sample2).",
   "# shared_column_values lists matches as: col1[,col1b]=value|col2[,col2b] (semicolon-separated).",
-  "# All sample pairs are included (score may be 0 when nothing informative is shared)."
+  "# Only pairs with n_shared_values >= 3, overlap fraction >= 0.5, and sample_id1 != sample_id2 are saved."
 )
 
 jaccard_output_comment <- c(
@@ -452,7 +461,8 @@ pairs <- mutate(pairs, dataset_id1 = basename(file_path1)) %>%
   mutate(metadata_file_path2 = str_c(metadata_dir, "/", dataset_id2, ".tsv")) %>%
   mutate(sg_out_file_path = str_c("/Data/doppelgangR_smokinggun/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
   mutate(md_out_file_path = str_c("/Data/doppelgangR_metadata/", dataset_id1, "_", dataset_id2, "____samples.tsv.gz")) %>%
-  mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) #%>%
+  mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
+  filter(dataset_id1 == "ABiM.100"))
 #filter(dataset_id1 == "GSE12276" & dataset_id2 == "GSE12763")
 # filter(dataset_id1 == "ABiM.100" & dataset_id2 == "ABiM.405")
 #filter(dataset_id1 == "SCANB.9206" | dataset_id2 == "SCANB.9206")
