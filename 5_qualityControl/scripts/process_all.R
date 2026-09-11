@@ -43,14 +43,6 @@ if (!dir.exists("/Data/prelim_metadata2/")) {
   dir.create("/Data/prelim_metadata2/")
 }
 
-if (!dir.exists("/Data/analysis_ready_metadata")) {
-  dir.create("/Data/analysis_ready_metadata")
-}
-
-if (!dir.exists("/Data/analysis_ready_expression_data")) {
-  dir.create("/Data/analysis_ready_expression_data")
-}
-
 if (!dir.exists("/Data/doppelgangR_smokinggun")) {
   dir.create("/Data/doppelgangR_smokinggun")
 }
@@ -63,9 +55,9 @@ if (!dir.exists("/Data/doppelgangR_expr_data")) {
   dir.create("/Data/doppelgangR_expr_data")
 }
 
-if (!dir.exists("/Data/IQRray_results")) {
-  dir.create("/Data/IQRray_results")
-}
+##if (!dir.exists("/Data/IQRray_results")) {
+##  dir.create("/Data/IQRray_results")
+##}
 
 if (!dir.exists("/Data/arrayQualityMetrics_results")) {
   dir.create("/Data/arrayQualityMetrics_results")
@@ -79,18 +71,25 @@ if (!dir.exists("/Data/quality_summaries")) {
   dir.create("/Data/quality_summaries")
 }
 
+if (!dir.exists("/Data/analysis_ready_metadata")) {
+  dir.create("/Data/analysis_ready_metadata")
+}
+
+if (!dir.exists("/Data/analysis_ready_expression_data")) {
+  dir.create("/Data/analysis_ready_expression_data")
+}
+
 #source("scripts/clean_expression_data_colnames.R")
 #source("scripts/match_expr_data_and_metadata.R")
 #source("scripts/add_gene_identifiers.R")
 
 ###source("scripts/filter_chips.R")
 
-source("scripts/check_for_duplicates.R")
+#source("scripts/check_for_duplicates.R")
 
 ###source("functions/compute_IQRray.R")
 ###source("functions/run_IQRray.R")
 ###source("functions/bind_IQR_file.R")
-
 ##source("scripts/IQRray_E_TABM_158.R")
 ##source("scripts/IQRray_single_chips.R")
 ##source("scripts/IQRray_multiple_chips.R")
@@ -102,4 +101,4 @@ source("scripts/check_for_duplicates.R")
 
 #source("scripts/explain_variation.R")
 
-#source("scripts/summarize.R")
+source("scripts/summarize.R")
