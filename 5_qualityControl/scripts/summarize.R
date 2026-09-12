@@ -7,8 +7,8 @@ library(data.table)
 # fread is much faster than read_tsv for thousands of small files.
 # Comment lines (#) from SIS/Jaccard headers are stripped via grep.
 doppelgangR_metadata_files <- list.files(
-  "/Data/doppelgangR_metadata/",
-  pattern = "Normal.+____samples\\.tsv\\.gz$",
+  "/Data/doppelgangR_metadata",
+  pattern = "____samples\\.tsv\\.gz$",
   full.names = TRUE
 )
 
@@ -17,11 +17,9 @@ doppelgangR_metadata_files <- list.files(
 doppelgangR_metadata <- tibble(
   sample_id1 = character(),
   sample_id2 = character(),
-  shared_information_score = double(),
   n_shared_values = double(),
   max_possible_shared_values = double(),
-  shared_column_values = character(),
-  file = character()
+  shared_column_values = character()
 )
 
 for (file_path in doppelgangR_metadata_files) {
@@ -54,18 +52,30 @@ for (file_path in doppelgangR_metadata_files) {
       sample_id1 = as.character(sample_id1),
       sample_id2 = as.character(sample_id2),
       shared_column_values = as.character(shared_column_values),
-      shared_information_score = as.numeric(shared_information_score),
       n_shared_values = as.numeric(n_shared_values),
-      max_possible_shared_values = as.numeric(max_possible_shared_values),
-      file = basename(file_path)
+      max_possible_shared_values = as.numeric(max_possible_shared_values)
+    ) %>%
+    select(
+      sample_id1,
+      sample_id2,
+      n_shared_values,
+      max_possible_shared_values,
+      shared_column_values
     )
 
   doppelgangR_metadata <- bind_rows(doppelgangR_metadata, file_data)
 }
 
+# Drop reverse duplicates: (A, B) and (B, A) count as the same pair.
+doppelgangR_metadata <- doppelgangR_metadata %>%
+  mutate(
+    id_a = pmin(sample_id1, sample_id2),
+    id_b = pmax(sample_id1, sample_id2)
+  ) %>%
+  distinct(id_a, id_b, .keep_all = TRUE) %>%
+  select(-id_a, -id_b)
+
 print(doppelgangR_metadata, width = Inf)
 print(dim(doppelgangR_metadata))
-
-#I also want to modify the code so it doesn't include the same pair of samples twice. For example, it is possible that 
 
 #doppelgangR_expr_data <- read_tsv("/Data/doppelgangR_expr_data/")
