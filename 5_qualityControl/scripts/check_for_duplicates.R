@@ -335,7 +335,19 @@ calcJaccardScore <- function(metadata1, metadata2, col1_vector, col2_vector) {
 }
 
 processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metadata_file_path1, metadata_file_path2, sg_out_file_path, md_out_file_path, ed_out_file_path) {
-  if (file.exists(md_out_file_path)) {
+  variables_out_file_path <- sub(
+    "____samples.tsv.gz",
+    "____variables.tsv.gz",
+    md_out_file_path
+  )
+
+  # Skip only when every expected output for this pair already exists.
+  # Checking samples alone was wrong: a failed mid-run pair can have
+  # samples.tsv.gz but still be missing variables, smoking-gun, or expression.
+  if (file.exists(sg_out_file_path) &&
+      file.exists(md_out_file_path) &&
+      file.exists(variables_out_file_path) &&
+      file.exists(ed_out_file_path)) {
     return(NULL)
   }
 
@@ -389,34 +401,48 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     write_tsv(result, sg_out_file_path)
   }
 
-  if (!file.exists(md_out_file_path)) {
+  if (!file.exists(md_out_file_path) || !file.exists(variables_out_file_path)) {
     if (is.null(metadata1) || is.null(metadata2) ||
         ncol(metadata1) == 0 || ncol(metadata2) == 0) {
-      write_sis_samples(empty_sis_tbl(), md_out_file_path)
-    } else {
-      print(paste0("Calculating Shared Information Scores for ", dataset_id1, " and ", dataset_id2))
-      write_sis_samples(
-        calcSharedInformationScores(metadata1, metadata2),
-        md_out_file_path
-      )
-
-      # Variable-pair Jaccard scores are written separately for inspection;
-      # SIS itself compares values across all column combinations.
-      candidate_metadata_combos <- expand.grid(
-        col1 = colnames(metadata1),
-        col2 = colnames(metadata2),
-        stringsAsFactors = FALSE
-      )
-      if (nrow(candidate_metadata_combos) > 0) {
-        candidate_metadata_combos <- mutate(
-          candidate_metadata_combos,
-          jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)
-        ) %>%
-          arrange(desc(jaccard_score), col1, col2)
+      if (!file.exists(md_out_file_path)) {
+        write_sis_samples(empty_sis_tbl(), md_out_file_path)
+      }
+      if (!file.exists(variables_out_file_path)) {
         write_jaccard_variables(
-          candidate_metadata_combos,
-          sub("____samples.tsv.gz", "____variables.tsv.gz", md_out_file_path)
+          tibble(col1 = character(), col2 = character(), jaccard_score = double()),
+          variables_out_file_path
         )
+      }
+    } else {
+      if (!file.exists(md_out_file_path)) {
+        print(paste0("Calculating Shared Information Scores for ", dataset_id1, " and ", dataset_id2))
+        write_sis_samples(
+          calcSharedInformationScores(metadata1, metadata2),
+          md_out_file_path
+        )
+      }
+
+      if (!file.exists(variables_out_file_path)) {
+        # Variable-pair Jaccard scores are written separately for inspection;
+        # SIS itself compares values across all column combinations.
+        candidate_metadata_combos <- expand.grid(
+          col1 = colnames(metadata1),
+          col2 = colnames(metadata2),
+          stringsAsFactors = FALSE
+        )
+        if (nrow(candidate_metadata_combos) > 0) {
+          candidate_metadata_combos <- mutate(
+            candidate_metadata_combos,
+            jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)
+          ) %>%
+            arrange(desc(jaccard_score), col1, col2)
+          write_jaccard_variables(candidate_metadata_combos, variables_out_file_path)
+        } else {
+          write_jaccard_variables(
+            tibble(col1 = character(), col2 = character(), jaccard_score = double()),
+            variables_out_file_path
+          )
+        }
       }
     }
   }
