@@ -49,6 +49,15 @@ getMetadata <- function(metadata_file_path) {
       as.data.frame()
     rownames(metadata) <- sampleIDs
 
+    # doppelgangR / tibble::add_column() require unique column names.
+    if (anyDuplicated(colnames(metadata))) {
+      print(paste0(
+        "Duplicate metadata columns in ", metadata_file_path, ": ",
+        paste(unique(colnames(metadata)[duplicated(colnames(metadata))]), collapse = ", ")
+      ))
+      colnames(metadata) <- make.unique(colnames(metadata), sep = "_")
+    }
+
     return(metadata)
   }
 }
