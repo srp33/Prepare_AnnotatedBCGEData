@@ -451,19 +451,32 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     print(paste0("Calculating expression correlation for ", dataset_id1, " and ", dataset_id2))
     expr_data <- cbind(expr_data1, expr_data2)
 
-    cor_matrix <- cor(expr_data, method = "spearman")
+    # tibble::rownames_to_column() requires unique dimnames; duplicate sample
+    # IDs can appear when the same ID exists in both datasets or in a TSV.
+    if (anyDuplicated(colnames(expr_data))) {
+      print(paste0(
+        "Duplicate sample column names for ", dataset_id1, " and ", dataset_id2, ": ",
+        paste(unique(colnames(expr_data)[duplicated(colnames(expr_data))]), collapse = ", ")
+      ))
+      colnames(expr_data) <- make.unique(colnames(expr_data), sep = "_")
+    }
 
-    cor_tbl <- cor_matrix |>
-      as.data.frame() |>
-      rownames_to_column("sample1") |>
-      mutate(row_num = row_number()) |>
-      pivot_longer(
-        -c(sample1, row_num),
-        names_to = "sample2",
-        values_to = "correlation_coefficient"
-      ) |>
-      mutate(col_num = match(sample2, colnames(cor_matrix))) |>
+    cor_matrix <- cor(expr_data, method = "spearman")
+    n_samples <- ncol(cor_matrix)
+
+    # Index-based upper triangle: avoids pivot_longer/rownames_to_column, which
+    # break when cor_matrix dimnames are not unique.
+    cor_tbl <- expand.grid(
+      row_num = seq_len(n_samples),
+      col_num = seq_len(n_samples),
+      stringsAsFactors = FALSE
+    ) |>
       filter(row_num > col_num) |>
+      mutate(
+        sample1 = rownames(cor_matrix)[row_num],
+        sample2 = colnames(cor_matrix)[col_num],
+        correlation_coefficient = cor_matrix[cbind(row_num, col_num)]
+      ) |>
       select(sample1, sample2, correlation_coefficient) |>
       arrange(desc(correlation_coefficient), sample1, sample2)
 
