@@ -367,23 +367,6 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     stop(paste0("There are few, if any, matching samples between the metadata and expression data for ", file_path2, "."))
   }
 
-  overlapping_sample_ids <- intersect(sample_ids1, sample_ids2)
-  if (length(overlapping_sample_ids) > 0) {
-    n_show <- min(20, length(overlapping_sample_ids))
-    shown_ids <- paste(overlapping_sample_ids[seq_len(n_show)], collapse = ", ")
-    more <- if (length(overlapping_sample_ids) > n_show) {
-      paste0(" (and ", length(overlapping_sample_ids) - n_show, " more)")
-    } else {
-      ""
-    }
-    stop(paste0(
-      "Datasets ", dataset_id1, " and ", dataset_id2,
-      " share ", length(overlapping_sample_ids),
-      " sample identifier(s). Sample IDs must be unique across datasets. Overlapping IDs: ",
-      shown_ids, more, "."
-    ))
-  }
-
   genes <- sort(intersect(rownames(expr_data1), rownames(expr_data2)))
 
   if (length(genes) < 1000) {
@@ -471,7 +454,9 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     cor_matrix <- cor(expr_data, method = "spearman")
     n_samples <- ncol(cor_matrix)
 
-    # Index-based upper triangle (avoids pivot_longer/rownames_to_column).
+    # Index-based upper triangle: works when sample IDs overlap across
+    # datasets (duplicate colnames), without renaming any identifiers.
+    # Name-based approaches (rownames_to_column / pivot_longer) fail then.
     cor_tbl <- expand.grid(
       row_num = seq_len(n_samples),
       col_num = seq_len(n_samples),
