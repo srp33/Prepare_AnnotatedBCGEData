@@ -491,9 +491,9 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
 }
 
 # Enable parallelization
-num_parallel = 16
-registerDoParallel(num_parallel)
-stopifnot(foreach::getDoParWorkers() == num_parallel)
+#num_parallel = 16
+#registerDoParallel(num_parallel)
+#stopifnot(foreach::getDoParWorkers() == num_parallel)
 
 # Run dopplegangR for pairwise comparisons of datasets.
 file_paths <- list.files(datadir, full.names = T)
@@ -523,8 +523,8 @@ pairs <- mutate(pairs, dataset_id1 = basename(file_path1)) %>%
 #filter(dataset_id1 == "GSE96058_HiSeq" & dataset_id2 == "SCANB.9206")
  # slice_sample(prop = 1)
 
-foreach (i = 1:nrow(pairs)) %dopar% {
-#for (i in 1:nrow(pairs)) {
+#foreach (i = 1:nrow(pairs)) %dopar% {
+for (i in 1:nrow(pairs)) {
   row <- as.vector(as.matrix(pairs[i,]))
   file_path1 <- row[1]
   file_path2 <- row[2]
