@@ -12,6 +12,9 @@ doppelgangR_metadata_files <- list.files(
   full.names = TRUE
 )
 
+print(doppelgangR_metadata_files)
+stop("test")
+
 # Start with an empty tibble that already has the expected columns so
 # bind_rows() does not fail on the first (0-column) bind.
 doppelgangR_metadata <- tibble(
