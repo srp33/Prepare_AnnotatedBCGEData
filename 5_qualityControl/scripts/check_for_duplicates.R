@@ -452,23 +452,20 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     expr_data <- cbind(expr_data1, expr_data2)
 
     cor_matrix <- cor(expr_data, method = "spearman")
-    n_samples <- ncol(cor_matrix)
 
-    # Index-based upper triangle: works when sample IDs overlap across
-    # datasets (duplicate colnames), without renaming any identifiers.
-    # Name-based approaches (rownames_to_column / pivot_longer) fail then.
-    cor_tbl <- expand.grid(
-      row_num = seq_len(n_samples),
-      col_num = seq_len(n_samples),
-      stringsAsFactors = FALSE
+    # Keep only high correlations early: avoid materializing every pair
+    # (can be hundreds of millions). Index-based so duplicate sample IDs
+    # across datasets are fine without renaming.
+    cor_threshold <- 0.97
+    hit_idx <- which(
+      cor_matrix >= cor_threshold & upper.tri(cor_matrix),
+      arr.ind = TRUE
+    )
+    cor_tbl <- tibble(
+      sample1 = rownames(cor_matrix)[hit_idx[, 1]],
+      sample2 = colnames(cor_matrix)[hit_idx[, 2]],
+      correlation_coefficient = cor_matrix[hit_idx]
     ) |>
-      filter(row_num > col_num) |>
-      mutate(
-        sample1 = rownames(cor_matrix)[row_num],
-        sample2 = colnames(cor_matrix)[col_num],
-        correlation_coefficient = cor_matrix[cbind(row_num, col_num)]
-      ) |>
-      select(sample1, sample2, correlation_coefficient) |>
       arrange(desc(correlation_coefficient), sample1, sample2)
 
     write_tsv(cor_tbl, ed_out_file_path)

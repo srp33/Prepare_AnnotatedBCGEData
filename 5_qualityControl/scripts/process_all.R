@@ -85,7 +85,7 @@ if (!dir.exists("/Data/analysis_ready_expression_data")) {
 
 ###source("scripts/filter_chips.R")
 
-#source("scripts/check_for_duplicates.R")
+source("scripts/check_for_duplicates.R")
 
 ###source("functions/compute_IQRray.R")
 ###source("functions/run_IQRray.R")
@@ -101,4 +101,4 @@ if (!dir.exists("/Data/analysis_ready_expression_data")) {
 
 #source("scripts/explain_variation.R")
 
-source("scripts/summarize.R")
+# source("scripts/summarize.R")
