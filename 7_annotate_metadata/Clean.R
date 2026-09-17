@@ -125,7 +125,7 @@ all = bind_rows(numeric, date, identifier, categorical) %>%
   mutate(Value_Ontology_Terms = if_else(Original_Value == "NA", "Not Applicable (C48660)", Value_Ontology_Terms)) %>%
   mutate(Basic_Data_Type_Ontology_Term = if_else(Value_Ontology_Terms == "Not Applicable (C48660)", "Null (C47840)", Basic_Data_Type_Ontology_Term)) %>%
   mutate(Basic_Data_Type_Ontology_Term = if_else(Value_Ontology_Terms == "Unknown (C17998)", "Null (C47840)", Basic_Data_Type_Ontology_Term)) %>%
-  mutate(Value_Ontology_Terms = if_else(Basic_Data_Type_Ontology_Term == "Null (C47840)", "Not Applicable (C48660)||Or (C37998)||Unknown (C17998)", Basic_Data_Type_Ontology_Term)) %>%
+  mutate(Value_Ontology_Terms = if_else(Basic_Data_Type_Ontology_Term == "Null (C47840)", "Not Applicable (C48660)||Or (C37998)||Unknown (C17998)", Value_Ontology_Terms)) %>%
   arrange(Field_Name_Ontology_Terms, Value_Ontology_Terms, Original_Field_Name)
 
 # Check for values that should be identifier or numeric but aren't.
@@ -139,11 +139,11 @@ all = bind_rows(numeric, date, identifier, categorical) %>%
 # Find all unique ontology terms.
 ontology_terms = bind_rows(
   dplyr::select(all, Basic_Data_Type_Ontology_Term) %>%
-    rename(Term = Basic_Data_Type_Ontology_Term),
+    dplyr::rename(Term = Basic_Data_Type_Ontology_Term),
   dplyr::select(all, Field_Name_Ontology_Terms) %>%
-    rename(Term = Field_Name_Ontology_Terms),
+    dplyr::rename(Term = Field_Name_Ontology_Terms),
   dplyr::select(all, Value_Ontology_Terms) %>%
-    rename(Term = Value_Ontology_Terms)) %>%
+    dplyr::rename(Term = Value_Ontology_Terms)) %>%
   separate_longer_delim(Term, delim = "||") %>%
   distinct(Term) %>%
   arrange(Term) %>%
