@@ -247,6 +247,7 @@ calcSharedInformationScores <- function(metadata1, metadata2) {
 sis_output_comment <- c(
   "# Shared Information Score (SIS) for candidate duplicate samples.",
   "# Higher scores = stronger evidence the two samples are the same individual.",
+  "# dataset_id1 / sample_id1 are from the first dataset; dataset_id2 / sample_id2 from the second.",
   "# Score = sum of (rarity weight * column-level matches) for shared values.",
   "# A less common shared value raises the score, because unrelated samples",
   "# are less likely to match on it by chance. Example: sharing a rare mutation",
@@ -260,6 +261,7 @@ sis_output_comment <- c(
 
 jaccard_output_comment <- c(
   "# Metadata column pairs across two datasets (col1 from dataset 1, col2 from dataset 2).",
+  "# dataset_id1 / col1 are from the first dataset; dataset_id2 / col2 from the second.",
   "# jaccard_score measures how similar the value *distributions* are (not just shared labels):",
   "#   sum(min(p1,p2)) / sum(max(p1,p2)); 1 = same frequencies, 0 = no shared values.",
   "# High scores suggest the two columns may represent the same kind of variable.",
@@ -299,6 +301,23 @@ empty_sis_tbl <- function() {
     n_shared_values = integer(),
     max_possible_shared_values = integer(),
     shared_column_values = character()
+  )
+}
+
+empty_jaccard_tbl <- function() {
+  tibble(
+    col1 = character(),
+    col2 = character(),
+    jaccard_score = double()
+  )
+}
+
+add_dataset_ids <- function(df, dataset_id1, dataset_id2) {
+  mutate(
+    df,
+    dataset_id1 = .env$dataset_id1,
+    dataset_id2 = .env$dataset_id2,
+    .before = 1
   )
 }
 
@@ -397,7 +416,8 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     )
 
     result <- summary(result)
-    result <- dplyr::select(result, sample1, sample2, smokinggun.similarity, smokinggun.doppel)
+    result <- dplyr::select(result, sample1, sample2, smokinggun.similarity, smokinggun.doppel) %>%
+      add_dataset_ids(dataset_id1, dataset_id2)
     write_tsv(result, sg_out_file_path)
   }
 
@@ -405,11 +425,14 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     if (is.null(metadata1) || is.null(metadata2) ||
         ncol(metadata1) == 0 || ncol(metadata2) == 0) {
       if (!file.exists(md_out_file_path)) {
-        write_sis_samples(empty_sis_tbl(), md_out_file_path)
+        write_sis_samples(
+          add_dataset_ids(empty_sis_tbl(), dataset_id1, dataset_id2),
+          md_out_file_path
+        )
       }
       if (!file.exists(variables_out_file_path)) {
         write_jaccard_variables(
-          tibble(col1 = character(), col2 = character(), jaccard_score = double()),
+          add_dataset_ids(empty_jaccard_tbl(), dataset_id1, dataset_id2),
           variables_out_file_path
         )
       }
@@ -417,7 +440,11 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
       if (!file.exists(md_out_file_path)) {
         print(paste0("Calculating Shared Information Scores for ", dataset_id1, " and ", dataset_id2))
         write_sis_samples(
-          calcSharedInformationScores(metadata1, metadata2),
+          add_dataset_ids(
+            calcSharedInformationScores(metadata1, metadata2),
+            dataset_id1,
+            dataset_id2
+          ),
           md_out_file_path
         )
       }
@@ -435,11 +462,12 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
             candidate_metadata_combos,
             jaccard_score = calcJaccardScore(metadata1, metadata2, col1, col2)
           ) %>%
-            arrange(desc(jaccard_score), col1, col2)
+            arrange(desc(jaccard_score), col1, col2) %>%
+            add_dataset_ids(dataset_id1, dataset_id2)
           write_jaccard_variables(candidate_metadata_combos, variables_out_file_path)
         } else {
           write_jaccard_variables(
-            tibble(col1 = character(), col2 = character(), jaccard_score = double()),
+            add_dataset_ids(empty_jaccard_tbl(), dataset_id1, dataset_id2),
             variables_out_file_path
           )
         }
@@ -453,19 +481,20 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
 
     cor_matrix <- cor(expr_data, method = "spearman")
 
-    # Keep only high correlations early: avoid materializing every pair
-    # (can be hundreds of millions). Index-based so duplicate sample IDs
-    # across datasets are fine without renaming.
+    # Keep only high correlations between the two datasets (not within-dataset
+    # pairs). cbind puts dataset1 columns first, then dataset2.
+    # sample1 is always from dataset_id1; sample2 from dataset_id2.
     cor_threshold <- 0.97
-    hit_idx <- which(
-      cor_matrix >= cor_threshold & upper.tri(cor_matrix),
-      arr.ind = TRUE
-    )
+    n1 <- ncol(expr_data1)
+    n2 <- ncol(expr_data2)
+    cross_block <- cor_matrix[seq_len(n1), n1 + seq_len(n2), drop = FALSE]
+    hit_idx <- which(cross_block >= cor_threshold, arr.ind = TRUE)
     cor_tbl <- tibble(
-      sample1 = rownames(cor_matrix)[hit_idx[, 1]],
-      sample2 = colnames(cor_matrix)[hit_idx[, 2]],
-      correlation_coefficient = cor_matrix[hit_idx]
+      sample1 = rownames(cross_block)[hit_idx[, 1]],
+      sample2 = colnames(cross_block)[hit_idx[, 2]],
+      correlation_coefficient = cross_block[hit_idx]
     ) |>
+      add_dataset_ids(dataset_id1, dataset_id2) |>
       arrange(desc(correlation_coefficient), sample1, sample2)
 
     write_tsv(cor_tbl, ed_out_file_path)
