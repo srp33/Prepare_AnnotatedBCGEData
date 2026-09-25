@@ -274,6 +274,7 @@ write_commented_tsv_gz <- function(df, path, comments) {
   con <- gzfile(path, "wt")
   on.exit(close(con), add = TRUE)
   writeLines(comments, con)
+  print(paste0("Writing to ", path))
   write.table(
     df,
     file = con,
@@ -418,6 +419,8 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     result <- summary(result)
     result <- dplyr::select(result, sample1, sample2, smokinggun.similarity, smokinggun.doppel) %>%
       add_dataset_ids(dataset_id1, dataset_id2)
+
+    print(paste0("Writing to ", sg_out_file_path))
     write_tsv(result, sg_out_file_path)
   }
 
@@ -497,6 +500,7 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
       add_dataset_ids(dataset_id1, dataset_id2) |>
       arrange(desc(correlation_coefficient), sample1, sample2)
 
+    print(paste0("Writing to ", ed_out_file_path))
     write_tsv(cor_tbl, ed_out_file_path)
   }
 }
