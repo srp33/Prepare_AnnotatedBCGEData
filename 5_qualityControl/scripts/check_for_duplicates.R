@@ -506,7 +506,7 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
 }
 
 # Enable parallelization
-num_parallel = 16
+num_parallel = 4
 registerDoParallel(num_parallel)
 stopifnot(foreach::getDoParWorkers() == num_parallel)
 
@@ -533,13 +533,13 @@ pairs <- mutate(pairs, dataset_id1 = basename(file_path1)) %>%
   mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) #%>%
   # filter(dataset_id1 == "ABiM.100")
 #filter(dataset_id1 == "GSE12276" & dataset_id2 == "GSE12763")
-# filter(dataset_id1 == "ABiM.100" & dataset_id2 == "ABiM.405")
+#filter(dataset_id1 == "ABiM.100" & dataset_id2 == "ABiM.405")
 #filter(dataset_id1 == "SCANB.9206" | dataset_id2 == "SCANB.9206")
 #filter(dataset_id1 == "GSE96058_HiSeq" & dataset_id2 == "SCANB.9206")
  # slice_sample(prop = 1)
 
 foreach (i = 1:nrow(pairs)) %dopar% {
-# for (i in 1:nrow(pairs)) {
+#for (i in 1:nrow(pairs)) {
   row <- as.vector(as.matrix(pairs[i,]))
   file_path1 <- row[1]
   file_path2 <- row[2]
