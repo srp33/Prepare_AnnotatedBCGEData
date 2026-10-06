@@ -271,19 +271,28 @@ jaccard_output_comment <- c(
 # write_tsv/vroom requires a binary connection, so for commented .tsv.gz
 # output we write via a text gzfile connection + write.table instead.
 write_commented_tsv_gz <- function(df, path, comments) {
-  con <- gzfile(path, "wt")
-  on.exit(close(con), add = TRUE)
-  writeLines(comments, con)
-  print(paste0("Writing to ", path))
-  write.table(
-    df,
-    file = con,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE,
-    quote = FALSE,
-    na = ""
-  )
+#  con <- gzfile(path, "wt")
+#  on.exit(close(con), add = TRUE)
+#  writeLines(comments, con)
+  print(paste0("Writing2 to ", path))
+print("dakljfdsas")
+  print(type(df))
+  #print(df)
+  #print(dim(df))
+stop("bogus")
+
+#  write.table(
+#    df,
+#    file = con,
+#    sep = "\t",
+#    row.names = FALSE,
+#    col.names = TRUE,
+#    quote = FALSE,
+#    na = ""
+#  )
+
+  print(paste0("Done writing to ", path))
+  stop("got here333333")
 }
 
 write_sis_samples <- function(df, path) {
@@ -450,6 +459,7 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
           ),
           md_out_file_path
         )
+print("got here D")
       }
 
       if (!file.exists(variables_out_file_path)) {
@@ -530,16 +540,16 @@ pairs <- mutate(pairs, dataset_id1 = basename(file_path1)) %>%
   mutate(metadata_file_path2 = str_c(metadata_dir, "/", dataset_id2, ".tsv")) %>%
   mutate(sg_out_file_path = str_c("/Data/doppelgangR_smokinggun/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
   mutate(md_out_file_path = str_c("/Data/doppelgangR_metadata/", dataset_id1, "_", dataset_id2, "____samples.tsv.gz")) %>%
-  mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) #%>%
-  # filter(dataset_id1 == "ABiM.100")
+  mutate(ed_out_file_path = str_c("/Data/doppelgangR_expr_data/", dataset_id1, "_", dataset_id2, ".tsv.gz")) %>%
+  filter(dataset_id1 == "GSE6532_U133B")
 #filter(dataset_id1 == "GSE12276" & dataset_id2 == "GSE12763")
 #filter(dataset_id1 == "ABiM.100" & dataset_id2 == "ABiM.405")
 #filter(dataset_id1 == "SCANB.9206" | dataset_id2 == "SCANB.9206")
 #filter(dataset_id1 == "GSE96058_HiSeq" & dataset_id2 == "SCANB.9206")
  # slice_sample(prop = 1)
 
-foreach (i = 1:nrow(pairs)) %dopar% {
-#for (i in 1:nrow(pairs)) {
+#foreach (i = 1:nrow(pairs)) %dopar% {
+for (i in 1:nrow(pairs)) {
   row <- as.vector(as.matrix(pairs[i,]))
   file_path1 <- row[1]
   file_path2 <- row[2]
