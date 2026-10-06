@@ -271,28 +271,23 @@ jaccard_output_comment <- c(
 # write_tsv/vroom requires a binary connection, so for commented .tsv.gz
 # output we write via a text gzfile connection + write.table instead.
 write_commented_tsv_gz <- function(df, path, comments) {
-#  con <- gzfile(path, "wt")
-#  on.exit(close(con), add = TRUE)
-#  writeLines(comments, con)
-  print(paste0("Writing2 to ", path))
-print("dakljfdsas")
-  print(type(df))
-  #print(df)
-  #print(dim(df))
-stop("bogus")
+  con <- gzfile(path, "wt")
+  on.exit(close(con), add = TRUE)
+  writeLines(comments, con)
+  
+  print(paste0("Writing to ", path))
 
-#  write.table(
-#    df,
-#    file = con,
-#    sep = "\t",
-#    row.names = FALSE,
-#    col.names = TRUE,
-#    quote = FALSE,
-#    na = ""
-#  )
+  write.table(
+    df,
+    file = con,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE,
+    quote = FALSE,
+    na = ""
+  )
 
   print(paste0("Done writing to ", path))
-  stop("got here333333")
 }
 
 write_sis_samples <- function(df, path) {
