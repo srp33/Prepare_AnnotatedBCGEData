@@ -491,7 +491,7 @@ processCombo <- function(file_path1, file_path2, dataset_id1, dataset_id2, metad
     # Keep only high correlations between the two datasets (not within-dataset
     # pairs). cbind puts dataset1 columns first, then dataset2.
     # sample1 is always from dataset_id1; sample2 from dataset_id2.
-    cor_threshold <- 0.97
+    cor_threshold <- 0.95
     n1 <- ncol(expr_data1)
     n2 <- ncol(expr_data2)
     cross_block <- cor_matrix[seq_len(n1), n1 + seq_len(n2), drop = FALSE]

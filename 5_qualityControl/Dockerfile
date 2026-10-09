@@ -1,9 +1,25 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_23
 
-RUN R -e 'BiocManager::install(c("tidyverse", "data.table", "AnnotationDbi", "Biobase", "doppelgangR", "affy", "oligo", "GEOquery", "doParallel"), force = TRUE)'
-RUN R -e 'BiocManager::install(c("pd.hugene.1.0.st.v1", "pd.huex.1.0.st.v2", "u133aaofav2cdf", "hgu95av2cdf", "hgu133acdf", "hgu133a2cdf", "hgu133plus2cdf", "hgu133bcdf"), force = TRUE)'
-RUN R -e 'BiocManager::install(c("arrayQualityMetrics"), force = TRUE)'
-RUN R -e 'BiocManager::install(c("variancePartition"), force = TRUE)'
+# Install only packages that are not already present. Fail the build if any
+# package cannot be loaded, so a failed install is not cached as success.
+RUN cat > /usr/local/bin/install_pkgs.R << 'EOF'
+install_pkgs <- function(pkgs) {
+  missing_pkgs <- setdiff(pkgs, rownames(installed.packages()))
+  if (length(missing_pkgs)) {
+    BiocManager::install(missing_pkgs, update = FALSE, ask = FALSE)
+  }
+  failed <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(failed)) {
+    message("Failed to install: ", paste(failed, collapse = ", "))
+    quit(status = 1)
+  }
+}
+EOF
+
+RUN Rscript -e 'source("/usr/local/bin/install_pkgs.R"); install_pkgs(c("tidyverse", "data.table", "AnnotationDbi", "Biobase", "doppelgangR", "affy", "oligo", "GEOquery", "doParallel"))'
+RUN Rscript -e 'source("/usr/local/bin/install_pkgs.R"); install_pkgs(c("pd.hugene.1.0.st.v1", "pd.huex.1.0.st.v2", "u133aaofav2cdf", "hgu95av2cdf", "hgu133acdf", "hgu133a2cdf", "hgu133plus2cdf", "hgu133bcdf"))'
+RUN Rscript -e 'source("/usr/local/bin/install_pkgs.R"); install_pkgs("arrayQualityMetrics")'
+RUN Rscript -e 'source("/usr/local/bin/install_pkgs.R"); install_pkgs("variancePartition")'
 
 WORKDIR /5_qualityControl
 

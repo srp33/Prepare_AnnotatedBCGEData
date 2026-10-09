@@ -1,6 +1,8 @@
 library(tidyverse)
 library(data.table)
 
+options(readr.show_col_types = FALSE, readr.show_progress = FALSE)
+
 # We don't need to do anything with doppelgangR smoking gun results because it did
 #   not identifying any smoking guns.
 #
@@ -198,17 +200,132 @@ get_doppelgangR_expr_data <- function() {
   return(doppelgangR_expr_data)
 }
 
-doppelgangR_metadata <- get_doppelgangR_metadata()
-# print(doppelgangR_metadata)
-print(dim(doppelgangR_metadata))
+# Gene-level values for one sample pair, so identical and differing genes can be inspected.
+write_pair_expression <- function(dataset_id1, dataset_id2, sample1, sample2) {
+  data1 <- read_tsv(
+    paste0("/Data/expression_data4/", dataset_id1, ".tsv.gz"),
+    col_select = all_of(c("Entrez_Gene_ID", sample1))
+  )
+  data2 <- read_tsv(
+    paste0("/Data/expression_data4/", dataset_id2, ".tsv.gz"),
+    col_select = all_of(c("Entrez_Gene_ID", sample2))
+  )
 
-doppelgangR_expr_data <- get_doppelgangR_expr_data()
-# print(doppelgangR_expr_data, n = 100, width = Inf)
-print(dim(doppelgangR_expr_data))
+  genes <- intersect(data1$Entrez_Gene_ID, data2$Entrez_Gene_ID)
+  data1 <- data1[match(genes, data1$Entrez_Gene_ID), , drop = FALSE]
+  data2 <- data2[match(genes, data2$Entrez_Gene_ID), , drop = FALSE]
+
+  value1 <- data1[[sample1]]
+  value2 <- data2[[sample2]]
+  pair_values <- tibble(
+    Entrez_Gene_ID = genes,
+    !!sample1 := value1,
+    !!sample2 := value2,
+    same = round(value1, 3) == round(value2, 3)
+  ) %>%
+    # Unequal values, including missing comparisons, come before matches.
+    arrange(coalesce(same, FALSE), Entrez_Gene_ID)
+
+  out_path <- paste0(
+    "/Data/", dataset_id1, "_", sample1, "__", dataset_id2, "_", sample2, ".tsv"
+  )
+  write_tsv(pair_values, out_path)
+
+  plot_path <- sub("\\.tsv$", ".pdf", out_path)
+  scatter <- ggplot(pair_values, aes(x = .data[[sample1]], y = .data[[sample2]])) +
+    geom_point(alpha = 0.4, size = 0.6) +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+    labs(
+      x = paste(dataset_id1, sample1),
+      y = paste(dataset_id2, sample2)
+    ) +
+    theme_bw()
+  ggsave(plot_path, scatter, width = 6, height = 6)
+
+  c(tsv = out_path, pdf = plot_path)
+}
+
+# doppelgangR_metadata <- get_doppelgangR_metadata()
+expr_pairs <- get_doppelgangR_expr_data()
+
+# Read each expression file once, and only the sample columns used in pairs.
+needed_samples <- bind_rows(
+  expr_pairs %>% transmute(dataset_id = dataset_id1, sample_id = sample1),
+  expr_pairs %>% transmute(dataset_id = dataset_id2, sample_id = sample2)
+) %>%
+  distinct() %>%
+  summarise(sample_ids = list(sample_id), .by = dataset_id)
+
+expr_by_dataset <- set_names(
+  lapply(seq_len(nrow(needed_samples)), function(i) {
+    dataset_id <- needed_samples$dataset_id[i]
+    print(paste0("Reading expression data for ", dataset_id))
+    read_tsv(
+      paste0("/Data/expression_data4/", dataset_id, ".tsv.gz"),
+      col_select = all_of(c("Entrez_Gene_ID", needed_samples$sample_ids[[i]]))
+    )
+  }),
+  needed_samples$dataset_id
+)
+
+dataset_pairs <- expr_pairs %>%
+  distinct(dataset_id1, dataset_id2)
+
+results <- vector("list", nrow(dataset_pairs))
+for (i in seq_len(nrow(dataset_pairs))) {
+  dataset_id1 <- dataset_pairs$dataset_id1[i]
+  dataset_id2 <- dataset_pairs$dataset_id2[i]
+  print(paste0(
+    "Comparing ", dataset_id1, " and ", dataset_id2,
+    " (", i, " of ", nrow(dataset_pairs), ")"
+  ))
+
+  sample_pairs <- expr_pairs %>%
+    filter(dataset_id1 == .env$dataset_id1, dataset_id2 == .env$dataset_id2)
+
+  # Align genes once, then compare every sample pair from these two datasets.
+  data1 <- expr_by_dataset[[dataset_id1]]
+  data2 <- expr_by_dataset[[dataset_id2]]
+  genes <- intersect(data1$Entrez_Gene_ID, data2$Entrez_Gene_ID)
+  data1 <- data1[match(genes, data1$Entrez_Gene_ID), , drop = FALSE]
+  data2 <- data2[match(genes, data2$Entrez_Gene_ID), , drop = FALSE]
+
+  # NA is neither same nor different. Equal values count as the same.
+  counts <- vapply(seq_len(nrow(sample_pairs)), function(j) {
+    x <- round(data1[[sample_pairs$sample1[j]]], 3)
+    y <- round(data2[[sample_pairs$sample2[j]]], 3)
+    c(
+      num_same = as.integer(sum(x == y, na.rm = TRUE)),
+      num_different = as.integer(sum(x != y, na.rm = TRUE))
+    )
+  }, integer(2))
+
+  results[[i]] <- sample_pairs %>%
+    mutate(
+      num_same = counts["num_same", ],
+      num_different = counts["num_different", ]
+    )
+}
+
+results <- bind_rows(results) %>%
+  arrange(desc(correlation_coefficient), num_different)
+
+write_tsv(results, "/Data/test.tsv")
+
+# write_pair_expression("ABiM.100", "ABiM.405", "ABiM100.001", "ABiM405.269")
+# write_pair_expression("E_TABM_158", "GSE7378", "b0341", "GSM177501")
+# write_pair_expression("GSE20194", "GSE25055", "GSM505578", "GSM615351")
+# write_pair_expression("GSE20194", "GSE25055", "GSM505565", "GSM615337")
+# write_pair_expression("GSE21653", "GSE31448", "GSM540175", "GSM781316")
+write_pair_expression("GSE23720", "GSE31448", "GSM585333", "GSM781316")
+write_pair_expression("GSE96058_HiSeq", "GSE96058_NextSeq", "GSM2530337", "GSM2530057")
+
 
 #TODO: Filter sample pairs based on this. Identify criteria for filtering based on one or the other, not necessarily both.
 
 #TODO: Create code similar to what is above for aggregating the Variables.tsv.gz files. Then filter metadata variables based on the values in the Variables.tsv.gz files.
 #      Need to have a way of picking one when two variables are perfectly overlapping. (First make sure the logic right.)
+
 #TODO: Save files that indicate what needs to be filtered out. Use that in a future step to filter the data and ontology mappings.
+
 #TODO: Remove the IQRay stuff from the Dockerfile and from the pipeline.
