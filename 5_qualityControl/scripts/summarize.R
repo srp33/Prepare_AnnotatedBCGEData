@@ -139,9 +139,6 @@ get_doppelgangR_expr_data <- function() {
     basename(doppelgangR_expr_data_files) != "summary.tsv.gz"
   ]
 
-  doppelgangR_expr_data_files <- doppelgangR_expr_data_files[
-    basename(doppelgangR_expr_data_files) != "summary_pairs.tsv.gz"
-  ]
 
   # Start with an empty tibble that already has the expected columns so
   # bind_rows() does not fail on the first (0-column) bind.
@@ -198,8 +195,70 @@ get_doppelgangR_expr_data <- function() {
       id_b = pmax(side_a, side_b)
     ) %>%
     distinct(id_a, id_b, .keep_all = TRUE) %>%
-    dplyr::select(-side_a, -side_b, -id_a, -id_b) %>%
-    arrange(desc(correlation_coefficient))
+    dplyr::select(-side_a, -side_b, -id_a, -id_b)
+
+  # Enrich with gene-identity counts before writing the summary.
+  # Read each expression file once, and only the sample columns used in pairs.
+  needed_samples <- bind_rows(
+    doppelgangR_expr_data %>% transmute(dataset_id = dataset_id1, sample_id = sample1),
+    doppelgangR_expr_data %>% transmute(dataset_id = dataset_id2, sample_id = sample2)
+  ) %>%
+    distinct() %>%
+    summarise(sample_ids = list(sample_id), .by = dataset_id)
+
+  expr_by_dataset <- set_names(
+    lapply(seq_len(nrow(needed_samples)), function(i) {
+      dataset_id <- needed_samples$dataset_id[i]
+      print(paste0("Reading expression data for ", dataset_id))
+      read_tsv(
+        paste0("/Data/expression_data4/", dataset_id, ".tsv.gz"),
+        col_select = all_of(c("Entrez_Gene_ID", needed_samples$sample_ids[[i]]))
+      )
+    }),
+    needed_samples$dataset_id
+  )
+
+  dataset_pairs <- doppelgangR_expr_data %>%
+    distinct(dataset_id1, dataset_id2)
+
+  results <- vector("list", nrow(dataset_pairs))
+  for (i in seq_len(nrow(dataset_pairs))) {
+    dataset_id1 <- dataset_pairs$dataset_id1[i]
+    dataset_id2 <- dataset_pairs$dataset_id2[i]
+    print(paste0(
+      "Comparing ", dataset_id1, " and ", dataset_id2,
+      " (", i, " of ", nrow(dataset_pairs), ")"
+    ))
+
+    sample_pairs <- doppelgangR_expr_data %>%
+      filter(dataset_id1 == .env$dataset_id1, dataset_id2 == .env$dataset_id2)
+
+    # Align genes once, then compare every sample pair from these two datasets.
+    data1 <- expr_by_dataset[[dataset_id1]]
+    data2 <- expr_by_dataset[[dataset_id2]]
+    genes <- intersect(data1$Entrez_Gene_ID, data2$Entrez_Gene_ID)
+    data1 <- data1[match(genes, data1$Entrez_Gene_ID), , drop = FALSE]
+    data2 <- data2[match(genes, data2$Entrez_Gene_ID), , drop = FALSE]
+
+    # NA is neither same nor different. Equal values count as the same.
+    counts <- vapply(seq_len(nrow(sample_pairs)), function(j) {
+      x <- round(data1[[sample_pairs$sample1[j]]], 3)
+      y <- round(data2[[sample_pairs$sample2[j]]], 3)
+      c(
+        num_same = as.integer(sum(x == y, na.rm = TRUE)),
+        num_different = as.integer(sum(x != y, na.rm = TRUE))
+      )
+    }, integer(2))
+
+    results[[i]] <- sample_pairs %>%
+      mutate(
+        num_same = counts["num_same", ],
+        num_different = counts["num_different", ]
+      )
+  }
+
+  doppelgangR_expr_data <- bind_rows(results) %>%
+    arrange(desc(correlation_coefficient), num_different)
 
   write_tsv(doppelgangR_expr_data, summary_file_path)
 
@@ -254,69 +313,10 @@ write_pair_expression <- function(dataset_id1, dataset_id2, sample1, sample2) {
 doppelgangR_metadata <- get_doppelgangR_metadata()
 expr_pairs <- get_doppelgangR_expr_data()
 
-# Read each expression file once, and only the sample columns used in pairs.
-needed_samples <- bind_rows(
-  expr_pairs %>% transmute(dataset_id = dataset_id1, sample_id = sample1),
-  expr_pairs %>% transmute(dataset_id = dataset_id2, sample_id = sample2)
-) %>%
-  distinct() %>%
-  summarise(sample_ids = list(sample_id), .by = dataset_id)
-
-expr_by_dataset <- set_names(
-  lapply(seq_len(nrow(needed_samples)), function(i) {
-    dataset_id <- needed_samples$dataset_id[i]
-    print(paste0("Reading expression data for ", dataset_id))
-    read_tsv(
-      paste0("/Data/expression_data4/", dataset_id, ".tsv.gz"),
-      col_select = all_of(c("Entrez_Gene_ID", needed_samples$sample_ids[[i]]))
-    )
-  }),
-  needed_samples$dataset_id
-)
-
-dataset_pairs <- expr_pairs %>%
-  distinct(dataset_id1, dataset_id2)
-
-results <- vector("list", nrow(dataset_pairs))
-for (i in seq_len(nrow(dataset_pairs))) {
-  dataset_id1 <- dataset_pairs$dataset_id1[i]
-  dataset_id2 <- dataset_pairs$dataset_id2[i]
-  print(paste0(
-    "Comparing ", dataset_id1, " and ", dataset_id2,
-    " (", i, " of ", nrow(dataset_pairs), ")"
-  ))
-
-  sample_pairs <- expr_pairs %>%
-    filter(dataset_id1 == .env$dataset_id1, dataset_id2 == .env$dataset_id2)
-
-  # Align genes once, then compare every sample pair from these two datasets.
-  data1 <- expr_by_dataset[[dataset_id1]]
-  data2 <- expr_by_dataset[[dataset_id2]]
-  genes <- intersect(data1$Entrez_Gene_ID, data2$Entrez_Gene_ID)
-  data1 <- data1[match(genes, data1$Entrez_Gene_ID), , drop = FALSE]
-  data2 <- data2[match(genes, data2$Entrez_Gene_ID), , drop = FALSE]
-
-  # NA is neither same nor different. Equal values count as the same.
-  counts <- vapply(seq_len(nrow(sample_pairs)), function(j) {
-    x <- round(data1[[sample_pairs$sample1[j]]], 3)
-    y <- round(data2[[sample_pairs$sample2[j]]], 3)
-    c(
-      num_same = as.integer(sum(x == y, na.rm = TRUE)),
-      num_different = as.integer(sum(x != y, na.rm = TRUE))
-    )
-  }, integer(2))
-
-  results[[i]] <- sample_pairs %>%
-    mutate(
-      num_same = counts["num_same", ],
-      num_different = counts["num_different", ]
-    )
-}
-
-results <- bind_rows(results) %>%
-  arrange(desc(correlation_coefficient), num_different)
-
-write_tsv(results, "/Data/test.tsv")
+# Filter tests can use expr_pairs from summary.tsv.gz
+# (includes correlation_coefficient, num_same, and num_different).
+print(expr_pairs, n = 100, width = Inf)
+print(dim(expr_pairs))
 
 # write_pair_expression("ABiM.100", "ABiM.405", "ABiM100.001", "ABiM405.269")
 # write_pair_expression("E_TABM_158", "GSE7378", "b0341", "GSM177501")
