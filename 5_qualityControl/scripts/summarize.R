@@ -25,6 +25,7 @@ get_doppelgangR_metadata <- function() {
     print(paste0("Reading summary file from ", summary_file_path))
     return(read_tsv(summary_file_path))
   }
+  print("got here")
 
   # fread is much faster than read_tsv for thousands of small files.
   # Comment lines (#) from SIS/Jaccard headers are stripped via grep.
@@ -133,8 +134,13 @@ get_doppelgangR_expr_data <- function() {
     pattern = "\\.tsv\\.gz$",
     full.names = TRUE
   )
+
   doppelgangR_expr_data_files <- doppelgangR_expr_data_files[
     basename(doppelgangR_expr_data_files) != "summary.tsv.gz"
+  ]
+
+  doppelgangR_expr_data_files <- doppelgangR_expr_data_files[
+    basename(doppelgangR_expr_data_files) != "summary_pairs.tsv.gz"
   ]
 
   # Start with an empty tibble that already has the expected columns so
@@ -245,7 +251,7 @@ write_pair_expression <- function(dataset_id1, dataset_id2, sample1, sample2) {
   c(tsv = out_path, pdf = plot_path)
 }
 
-# doppelgangR_metadata <- get_doppelgangR_metadata()
+doppelgangR_metadata <- get_doppelgangR_metadata()
 expr_pairs <- get_doppelgangR_expr_data()
 
 # Read each expression file once, and only the sample columns used in pairs.
@@ -317,8 +323,9 @@ write_tsv(results, "/Data/test.tsv")
 # write_pair_expression("GSE20194", "GSE25055", "GSM505578", "GSM615351")
 # write_pair_expression("GSE20194", "GSE25055", "GSM505565", "GSM615337")
 # write_pair_expression("GSE21653", "GSE31448", "GSM540175", "GSM781316")
-write_pair_expression("GSE23720", "GSE31448", "GSM585333", "GSM781316")
-write_pair_expression("GSE96058_HiSeq", "GSE96058_NextSeq", "GSM2530337", "GSM2530057")
+#write_pair_expression("GSE23720", "GSE31448", "GSM585333", "GSM781316")
+#write_pair_expression("GSE96058_HiSeq", "GSE96058_NextSeq", "GSM2530337", "GSM2530057")
+stop("got here")
 
 
 #TODO: Filter sample pairs based on this. Identify criteria for filtering based on one or the other, not necessarily both.
